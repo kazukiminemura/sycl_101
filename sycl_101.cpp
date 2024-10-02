@@ -11,6 +11,7 @@ int main() {
 
     // SYCLキューを作成（デフォルトデバイス、GPUまたはCPU）
     queue q;
+    std::cout << q.get_device().get_info<info::device::name>() << std::endl;
 
     // デバイスバッファを作成
     buffer<int, 1> bufferA(A.data(), range<1>(N));
