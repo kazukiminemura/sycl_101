@@ -36,7 +36,7 @@ h.parallel_for(range<1>(N), [=](id<1> i) {...})：並列に実行されるルー
 ## 実行方法
 SYCLプログラムを実行するには、SYCL対応のコンパイラ（例えばIntelのoneAPI DPC++またはCodeplayのComputeCpp）が必要です。   
 
-IntelのDPC++を使用する場合は、以下のようにコンパイルできます。  
+Intelのicpxを使用する場合は、以下のようにコンパイルできます。  
 
-dpcpp -o vector_add vector_add.cpp  
-./vector_add    
+icpx -fsycl -o sample sample.cpp  
+./sample    
