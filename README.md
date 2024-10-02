@@ -12,7 +12,7 @@ SYCLキュー（sycl::queue）を作成する
 ## コードの解説
 インクルードと名前空間の使用:   
 
-#include <CL/sycl.hpp>：SYCLライブラリをインクルードします。    
+#include <sycl/sycl.hpp>：SYCLライブラリをインクルードします。    
 using namespace sycl;：SYCLの名前空間を使用することで、コードを簡潔にします。   
 データの準備:       
 
