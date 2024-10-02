@@ -35,8 +35,8 @@ SYCLプログラムを実行するには、SYCL対応のコンパイラ（例え
 Intelのicpxを使用する場合は、以下のようにコンパイルできます。      
 
 ```
-icpx -fsycl -o sycl101 sycl101.cpp  
-./sycl101    
+icpx -fsycl -o sycl_101 sycl_101.cpp  
+./sycl_101    
   
 C[0] = 3  
 C[1] = 3  
