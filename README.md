@@ -40,3 +40,14 @@ Intelのicpxを使用する場合は、以下のようにコンパイルでき�
 
 icpx -fsycl -o sample sample.cpp  
 ./sample    
+  
+C[0] = 3  
+C[1] = 3  
+C[2] = 3  
+C[3] = 3  
+C[4] = 3  
+C[5] = 3  
+C[6] = 3  
+C[7] = 3  
+C[8] = 3  
+C[9] = 3  
