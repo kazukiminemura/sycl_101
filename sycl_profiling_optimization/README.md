@@ -74,7 +74,7 @@ Intel VTune Profilerのインストール: Intel oneAPIツールキットに含�
 プログラムのビルド: デバッグ情報を含めてビルドします。    
 
 ```
-dpcpp -g -O2 matmul_basic.cpp -o matmul_basic
+icpx -fsycl -g -O2 matmul_basic.cpp -o matmul_basic
 ```
 ### プロファイリングの実行:
 ```
@@ -149,9 +149,9 @@ h.parallel_for<class matmul_optimized>(
     });
 ```
 ## 変更点
-**ローカルアクセサ（local_accessor）**を使用してローカルメモリを確保。    
+ローカルアクセサ（local_accessor）**を使用してローカルメモリを確保。    
 データをローカルメモリにロードし、ワークグループ内で共有。    
-**バリア（item.barrier）**を使用して同期。    
+バリア（item.barrier）を使用して同期。    
 ## 効果
 グローバルメモリへのアクセスを削減。    
 メモリアクセスパターンを最適化し、キャッシュ効率を向上。    
