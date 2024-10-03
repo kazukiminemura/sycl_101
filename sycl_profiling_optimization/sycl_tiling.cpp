@@ -47,7 +47,7 @@ int main()
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "実行時間（基本実装）: " << duration.count() << " ms" << std::endl;
+    std::cout << "実行時間（タイリング実装）: " << duration.count() << " ms" << std::endl;
   }
   catch (exception const &e)
   {
