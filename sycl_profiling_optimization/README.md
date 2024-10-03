@@ -78,7 +78,7 @@ icpx -fsycl -g -O2 sycl_basic_matmul.cpp -o sycl_basic_matmul
 ```
 ### プロファイリングの実行:
 ```
-vtune -collect hotspots -result-dir vtune_result ./matmul_basic
+vtune -collect hotspots -result-dir vtune_result ./sycl_basic_matmul
 ```
 ### 結果の分析:
 VTune ProfilerのGUIまたはCLIを使用して結果を確認。    
@@ -162,7 +162,7 @@ h.parallel_for<class matmul_optimized>(
 プロファイリングの実行    
 
 ```
-vtune -collect hotspots -result-dir vtune_result_optimized ./matmul_optimized
+vtune -collect hotspots -result-dir vtune_result_optimized ./sycl_tiling_localmemory
 ```
 ### 結果の分析
 メモリアクセスの効率が向上していることを確認。    
