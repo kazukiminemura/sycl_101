@@ -178,4 +178,20 @@ for (size_t n = 0; n < TILE_SIZE; n++) {
 }
 ```
 `#pragma unroll`を使用して、コンパイラにループのアンローリングを指示。    
-パフォーマンスが向上する場合がありますが、逆効果になることもあるため、プロファイリングで効果を確認。    
+パフォーマンスが向上する場合がありますが、逆効果になることもあるため、プロファイリングで効果を確認。  
+
+## 実行例
+```
+$ icpx -fsycl sycl_basic_matmul.cpp -o sycl_basic_matmu
+$ icpx -fsycl sycl_tiling.cpp -o sycl_tiling
+$ icpx -fsycl sycl_tiling_localmemory.cpp -o sycl_tiling_localmemory
+$ icpx -fsycl sycl_tiling_localmemory_loopunroling.cpp -o sycl_tiling_localmemory_loopunrolin
+$ ./sycl_basic_matmul 
+実行時間（基本実装）: 125 ms
+$ ./sycl_tiling
+実行時間（基本実装）: 74 ms
+$ ./sycl_tiling_localmemory
+実行時間（基本実装）: 73 ms
+$ ./sycl_tiling_localmemory_loopunroling 
+実行時間（基本実装）: 2671 m
+```
