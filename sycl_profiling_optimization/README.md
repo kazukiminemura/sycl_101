@@ -74,7 +74,7 @@ Intel VTune Profilerのインストール: Intel oneAPIツールキットに含�
 プログラムのビルド: デバッグ情報を含めてビルドします。    
 
 ```
-icpx -fsycl -g -O2 matmul_basic.cpp -o matmul_basic
+icpx -fsycl -g -O2 sycl_basic_matmul.cpp -o sycl_basic_matmul
 ```
 ### プロファイリングの実行:
 ```
