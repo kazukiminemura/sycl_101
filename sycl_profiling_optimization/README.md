@@ -7,7 +7,7 @@
 ```
 cpp
 Copy code
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -21,7 +21,7 @@ int main() {
     std::vector<float> C(N * N, 0.0f);
 
     try {
-        queue q{ default_selector{} };
+        queue q;
 
         buffer<float, 2> a_buf(A.data(), range<2>(N, N));
         buffer<float, 2> b_buf(B.data(), range<2>(N, N));
@@ -66,3 +66,28 @@ int main() {
 parallel_forを使用して各要素の計算を並列化。    
 内部ループでkを用いて行列乗算を計算。   
 実行時間の計測: std::chronoを使用してカーネルの実行時間を計測。 
+
+
+## ステップ2: プロファイラを使用してボトルネックを特定
+### プロファイラの使用方法    
+    
+Intel VTune Profilerのインストール: Intel oneAPIツールキットに含まれるVTune Profilerを使用します。    
+    
+プログラムのビルド: デバッグ情報を含めてビルドします。    
+
+```
+dpcpp -g -O2 matmul_basic.cpp -o matmul_basic
+```
+### プロファイリングの実行:
+```
+vtune -collect hotspots -result-dir vtune_result ./matmul_basic
+```
+### 結果の分析:
+VTune ProfilerのGUIまたはCLIを使用して結果を確認。    
+ホットスポット（実行時間の多くを占める部分）を特定。    
+### 予想される結果    
+内部ループ（for (size_t k = 0; k < N; k++)）がボトルネックであることが判明。    
+メモリアクセスが非効率である可能性がある。    
+
+
+
