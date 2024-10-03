@@ -5,8 +5,6 @@
 まず、基本的な行列乗算をSYCLで実装します。  
 
 ```
-cpp
-Copy code
 #include <sycl/sycl.hpp>
 #include <iostream>
 #include <vector>
@@ -89,5 +87,73 @@ VTune ProfilerのGUIまたはCLIを使用して結果を確認。
 内部ループ（for (size_t k = 0; k < N; k++)）がボトルネックであることが判明。    
 メモリアクセスが非効率である可能性がある。    
 
+## ステップ3: 最適化の実施
+### 最適化1: ループタイル化によるメモリアクセスの改善
+```
+// カーネル内での変更
+constexpr size_t TILE_SIZE = 16;
+
+h.parallel_for<class matmul_tiled>(
+    nd_range<2>({ N, N }, { TILE_SIZE, TILE_SIZE }),
+    [=](nd_item<2> item) {
+
+        size_t row = item.get_global_id(0);
+        size_t col = item.get_global_id(1);
+
+        float sum = 0.0f;
+        for (size_t k = 0; k < N; k++) {
+            sum += a[row][k] * b[k][col];
+        }
+        c[row][col] = sum;
+    });
+```
+### 変更点
+nd_rangeを使用して、ワークグループを定義。  
+ワークグループサイズを{ TILE_SIZE, TILE_SIZE }に設定。    
+### 効果
+ワークグループ内でのデータの局所性が向上。    
+しかし、このままではまだローカルメモリを活用していない。    
+## 最適化2: ローカルメモリの活用    
+```
+h.parallel_for<class matmul_optimized>(
+    nd_range<2>({ N, N }, { TILE_SIZE, TILE_SIZE }),
+    [=](nd_item<2> item) {
+
+        size_t row = item.get_global_id(0);
+        size_t col = item.get_global_id(1);
+        size_t local_row = item.get_local_id(0);
+        size_t local_col = item.get_local_id(1);
+
+        // ローカルメモリの定義
+        local_accessor<float, 2> a_tile(range<2>(TILE_SIZE, TILE_SIZE), h);
+        local_accessor<float, 2> b_tile(range<2>(TILE_SIZE, TILE_SIZE), h);
+
+        float sum = 0.0f;
+
+        for (size_t k = 0; k < N; k += TILE_SIZE) {
+            // ローカルメモリにタイルをロード
+            a_tile[local_row][local_col] = a[row][k + local_col];
+            b_tile[local_row][local_col] = b[k + local_row][col];
+
+            item.barrier(access::fence_space::local_space);
+
+            // タイル内で計算
+            for (size_t n = 0; n < TILE_SIZE; n++) {
+                sum += a_tile[local_row][n] * b_tile[n][local_col];
+            }
+
+            item.barrier(access::fence_space::local_space);
+        }
+
+        c[row][col] = sum;
+    });
+```
+## 変更点
+**ローカルアクセサ（local_accessor）**を使用してローカルメモリを確保。    
+データをローカルメモリにロードし、ワークグループ内で共有。    
+**バリア（item.barrier）**を使用して同期。    
+## 効果
+グローバルメモリへのアクセスを削減。    
+メモリアクセスパターンを最適化し、キャッシュ効率を向上。    
 
 
