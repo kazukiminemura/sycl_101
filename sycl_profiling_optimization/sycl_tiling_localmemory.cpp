@@ -48,7 +48,7 @@ int main()
 
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		std::cout << "実行時間（タイリング、ローカルメモリ、アンローリング実装）: " << duration.count() << " ms" << std::endl;
+		std::cout << "実行時間（タイリング、ローカルメモリ実装）: " << duration.count() << " ms" << std::endl;
 	}
 	catch (exception const &e)
 	{
