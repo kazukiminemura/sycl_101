@@ -189,9 +189,9 @@ $ icpx -fsycl sycl_tiling_localmemory_loopunroling.cpp -o sycl_tiling_localmemor
 $ ./sycl_basic_matmul 
 実行時間（基本実装）: 125 ms
 $ ./sycl_tiling
-実行時間（基本実装）: 74 ms
+実行時間（タイリング実装）: 74 ms
 $ ./sycl_tiling_localmemory
-実行時間（基本実装）: 73 ms
+実行時間（タイリング、ローカルメモリ実装）: 73 ms
 $ ./sycl_tiling_localmemory_loopunroling 
-実行時間（基本実装）: 2671 m
+実行時間（タイリング、ローカルメモリ、アンローリング実装）: 2671 m
 ```
