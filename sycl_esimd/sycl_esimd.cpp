@@ -7,45 +7,48 @@ using namespace sycl::ext::intel::esimd;
 
 int main() {
     constexpr unsigned int size = 1024;
-    std::vector<float> A(size, 1.0f);
-    std::vector<float> B(size, 2.0f);
-    std::vector<float> C(size, 0.0f);
 
     try {
+        // キューの作成（GPUデバイスを選択）
         queue q;
 
-        // バッファの作成
-        buffer<float, 1> bufA(A.data(), range<1>(size));
-        buffer<float, 1> bufB(B.data(), range<1>(size));
-        buffer<float, 1> bufC(C.data(), range<1>(size));
+        // USMメモリの割り当て
+        float* A = malloc_shared<float>(size, q);
+        float* B = malloc_shared<float>(size, q);
+        float* C = malloc_shared<float>(size, q);
 
+        // ホスト側でデータを初期化
+        for (unsigned int i = 0; i < size; ++i) {
+            A[i] = 1.0f;
+            B[i] = 2.0f;
+            C[i] = 0.0f;
+        }
+
+        // カーネルの実行
         q.submit([&](handler& cgh) {
-            // アクセサの作成
-            auto accA = bufA.get_access<access::mode::read>(cgh);
-            auto accB = bufB.get_access<access::mode::read>(cgh);
-            auto accC = bufC.get_access<access::mode::write>(cgh);
-
             cgh.parallel_for<class esimd_vector_add>(
                 range<1>(size / 16), [=](id<1> i) SYCL_ESIMD_KERNEL {
                     // SIMDサイズを定義
                     constexpr unsigned int VL = 16;
 
-                    // ベクトルのオフセットを計算
+                    // オフセットの計算
                     unsigned int offset = i[0] * VL;
 
                     // メモリからロード
                     simd<float, VL> va;
                     simd<float, VL> vb;
-                    va.copy_from(accA.get_pointer() + offset);
-                    vb.copy_from(accB.get_pointer() + offset);
+                    va.copy_from(A + offset);
+                    vb.copy_from(B + offset);
 
                     // 要素ごとの加算
                     simd<float, VL> vc = va + vb;
 
                     // メモリにストア
-                    vc.copy_to(accC.get_pointer() + offset);
+                    vc.copy_to(C + offset);
                 });
-        }).wait();
+        });
+
+        q.wait();
 
         // 結果の検証
         bool passed = true;
@@ -62,7 +65,12 @@ int main() {
             std::cout << "計算結果に誤りがあります。" << std::endl;
         }
 
-    } catch (exception const& e) {
+        // USMメモリの解放
+        sycl::free(A, q);
+        sycl::free(B, q);
+        sycl::free(C, q);
+
+    } catch (sycl::exception const& e) {
         std::cerr << "SYCL例外が発生しました: " << e.what() << std::endl;
         return 1;
     }
