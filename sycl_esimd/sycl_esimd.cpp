@@ -1,6 +1,7 @@
 #include <sycl/sycl.hpp>
 #include <sycl/ext/intel/esimd.hpp>
 #include <iostream>
+#include <chrono>
 
 using namespace sycl;
 using namespace sycl::ext::intel::esimd;
@@ -28,6 +29,8 @@ int main() {
             C[i] = 0.0f;
         }
 
+        auto start = std::chrono::high_resolution_clock::now();
+
         // カーネルの実行
         q.submit([&](handler& cgh) {
             cgh.parallel_for<class esimd_vector_add>(
@@ -51,6 +54,10 @@ int main() {
 
         q.wait();
 
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "実行時間（ESIMD実装）: " << duration.count() << " ms" << std::endl;
+        
         // 結果の検証
         bool passed = true;
         for (size_t i = 0; i < Size; i++) {
