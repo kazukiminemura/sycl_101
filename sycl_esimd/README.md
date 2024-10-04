@@ -71,3 +71,15 @@ sycl::free(C, q);
 ```
 使用したUSMメモリを解放します。
 sycl::free関数にメモリポインタと関連付けられたキューを渡します。
+
+
+## 実行時間例
+$ ./sycl_base 
+Running on Intel(R) Graphics [0x9a49]
+実行時間（基本実装）: 136 ms
+計算結果は正しいです。
+
+$ ./sycl_esimd 
+Running on Intel(R) Graphics [0x9a49]
+実行時間（ESIMD実装）: 4 ms
+計算結果は正しいです。
