@@ -7,6 +7,7 @@ using namespace sycl::ext::intel::esimd;
 
 int main() {
     constexpr unsigned Size = 1024 * 128;
+    // SIMDサイズを定義
     constexpr unsigned VL = 16;
 
     try {
