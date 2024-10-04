@@ -6,19 +6,22 @@ using namespace sycl;
 using namespace sycl::ext::intel::esimd;
 
 int main() {
-    constexpr unsigned int size = 1024;
+    constexpr unsigned Size = 1024 * 128;
+    constexpr unsigned VL = 16;
 
     try {
         // キューの作成（GPUデバイスを選択）
         queue q;
+        auto dev = q.get_device();
+        std::cout << "Running on " << dev.get_info<info::device::name>() << "\n";
 
         // USMメモリの割り当て
-        float* A = malloc_shared<float>(size, q);
-        float* B = malloc_shared<float>(size, q);
-        float* C = malloc_shared<float>(size, q);
+        float* A = malloc_shared<float>(Size, q);
+        float* B = malloc_shared<float>(Size, q);
+        float* C = malloc_shared<float>(Size, q);
 
         // ホスト側でデータを初期化
-        for (unsigned int i = 0; i < size; ++i) {
+        for (unsigned int i = 0; i < Size; ++i) {
             A[i] = 1.0f;
             B[i] = 2.0f;
             C[i] = 0.0f;
@@ -27,12 +30,9 @@ int main() {
         // カーネルの実行
         q.submit([&](handler& cgh) {
             cgh.parallel_for<class esimd_vector_add>(
-                range<1>(size / 16), [=](id<1> i) SYCL_ESIMD_KERNEL {
-                    // SIMDサイズを定義
-                    constexpr unsigned int VL = 16;
-
+                range<1>(Size / VL), [=](id<1> i) SYCL_ESIMD_KERNEL {
                     // オフセットの計算
-                    unsigned int offset = i[0] * VL;
+                    unsigned int offset = i * VL;
 
                     // メモリからロード
                     simd<float, VL> va;
@@ -52,7 +52,7 @@ int main() {
 
         // 結果の検証
         bool passed = true;
-        for (size_t i = 0; i < size; i++) {
+        for (size_t i = 0; i < Size; i++) {
             if (C[i] != A[i] + B[i]) {
                 passed = false;
                 break;
