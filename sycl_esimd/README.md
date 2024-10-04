@@ -25,9 +25,6 @@ for (unsigned int i = 0; i < size; ++i) {
 q.submit([&](handler& cgh) {
     cgh.parallel_for<class esimd_vector_add>(
         range<1>(size / 16), [=](id<1> i) SYCL_ESIMD_KERNEL {
-            // SIMDサイズを定義
-            constexpr unsigned int VL = 16;
-
             // オフセットの計算
             unsigned int offset = i[0] * VL;
 
