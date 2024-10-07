@@ -15,7 +15,7 @@ oneAPI Toolkitからダウンロードできます。
 ### 2. CUDAコードの変換    
 コマンドラインから以下のコマンドを実行して変換します。  
 ```
-$ dpct --cuda-include-path="/usr/local/cuda/include" -in-root . -out-root ./dpct_output cuda2sycl.cu
+$ dpct --cuda-path=/usr/local/cuda/include --in-root=. --out-root=./dpct_output cuda2sycl.cu
 ```
 --cuda-include-pathはCUDAのヘッダーファイルへのパスを指定します。   
 -in-rootと-out-rootは入力ファイルと出力先ディレクトリを指定します。 
@@ -28,7 +28,6 @@ dpctは自動変換を行いますが、完全ではない場合があります�
 プログラムを実行して、正しく動作することを確認します。  
 ```
 $ ./cuda2sycl
-Device 0: 12th Gen Intel(R) Core(TM) i5-12400
-Device 1: NVIDIA GeForce RTX 3060 Ti
+デフォルトのCUDAデバイス: 12th Gen Intel(R) Core(TM) i5-12400
 計算完了
 ```
