@@ -10,18 +10,16 @@ __global__ void vector_add(const float* A, const float* B, float* C, int N) {
 }
 
 int main() {
-    int deviceCount = 0;
-    cudaError_t error = cudaGetDeviceCount(&deviceCount);
-    if (deviceCount == 0) {
-        std::cout << "No CUDA devices available." << std::endl;
-        return 0;
-    }
-
-    for (int device = 0; device < deviceCount; ++device) {
-        cudaDeviceProp deviceProp;
-        error = cudaGetDeviceProperties(&deviceProp, device);
-        std::cout << "Device " << device << ": " << deviceProp.name << std::endl;
-    }
+    // デバイスIDを格納する変数
+    int device_id;
+    // デフォルトのデバイスIDを取得（通常はデバイス0）
+    cudaGetDevice(&device_id);
+    // デバイスのプロパティを格納する変数
+    cudaDeviceProp device_prop;
+    // デフォルトデバイスのプロパティを取得
+    cudaGetDeviceProperties(&device_prop, device_id);
+    // デバイス名を表示
+    std::cout << "デフォルトのCUDAデバイス: " << device_prop.name << std::endl;
 
     int N = 1024;
     size_t bytes = N * sizeof(float);
