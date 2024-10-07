@@ -24,6 +24,11 @@ dpctは自動変換を行いますが、完全ではない場合があります�
 変換後のコードを確認し、必要に応じて手動で修正します。  
 ### 4. ビルドと実行    
 変換後のコードをビルドするには、DPC++コンパイラを使用します。   
-`icpx -fsycl cuda2sycl.cpp -o cuda2sycl_add`
-プログラムを実行して、正しく動作することを確認します。`
-`./cuda2sycl`
+`icpx -fsycl cuda2sycl.dp.cpp -o cuda2sycl_add`
+プログラムを実行して、正しく動作することを確認します。  
+```
+./cuda2sycl
+Device 0: 12th Gen Intel(R) Core(TM) i5-12400
+Device 1: NVIDIA GeForce RTX 3060 Ti
+計算完了
+```
