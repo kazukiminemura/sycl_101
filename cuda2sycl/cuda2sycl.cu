@@ -1,3 +1,6 @@
+#include <cuda.h>
+#include <iostream>
+
 // ベクトル加算のCUDAカーネル
 __global__ void vector_add(const float* A, const float* B, float* C, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -7,6 +10,19 @@ __global__ void vector_add(const float* A, const float* B, float* C, int N) {
 }
 
 int main() {
+    int deviceCount = 0;
+    cudaError_t error = cudaGetDeviceCount(&deviceCount);
+    if (deviceCount == 0) {
+        std::cout << "No CUDA devices available." << std::endl;
+        return 0;
+    }
+
+    for (int device = 0; device < deviceCount; ++device) {
+        cudaDeviceProp deviceProp;
+        error = cudaGetDeviceProperties(&deviceProp, device);
+        std::cout << "Device " << device << ": " << deviceProp.name << std::endl;
+    }
+
     int N = 1024;
     size_t bytes = N * sizeof(float);
 
