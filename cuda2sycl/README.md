@@ -15,7 +15,7 @@ oneAPI Toolkitからダウンロードできます。
 ### 2. CUDAコードの変換    
 コマンドラインから以下のコマンドを実行して変換します。  
 ```
-dpct --cuda-path=/usr/local/cuda/include --in-root=. --out-root=./dpct_output cuda2sycl.cu
+dpct --cuda-include-path=/usr/local/cuda/include --in-root=. --out-root=./dpct_output cuda2sycl.cu
 ```
 --cuda-include-pathはCUDAのヘッダーファイルへのパスを指定します。   
 -in-rootと-out-rootは入力ファイルと出力先ディレクトリを指定します。 
