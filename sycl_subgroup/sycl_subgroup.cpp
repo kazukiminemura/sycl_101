@@ -29,6 +29,7 @@ void run_kernel(int* A, int* B, int* C, const int N, queue q){
 int main() {
     const int N = 1024 * 1024;  // 1M要素
     queue q;
+    std::cout << q.get_device().get_info<sycl::info::device::name>() << std::endl;
 
     // USMメモリの確保
     int* A = malloc_shared<int>(N, q);
