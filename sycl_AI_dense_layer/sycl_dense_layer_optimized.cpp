@@ -6,6 +6,7 @@
 using namespace sycl;
 using namespace std::chrono;  // 実行時間計測に便利なstd::chrono名前空間
 
+
 // 簡単なAI推論の例（1層のDense Layer）
 void dense_layer(queue& q, float* input, float* weights, float* bias, float* output, int input_size, int output_size) {
     // SYCLカーネルを実行
@@ -17,6 +18,27 @@ void dense_layer(queue& q, float* input, float* weights, float* bias, float* out
                 sum += input[j] * weights[i * input_size + j];  // 重み行列と入力ベクトルの積
             }
             output[i] = sum;  // 結果を出力
+        });
+    }).wait();
+}
+
+
+// 簡単なAI推論の例（1層のDense Layer）
+void dense_layer_optimized(queue& q, float* input, float* weights, float* bias, float* output, int input_size, int output_size) {
+    // SYCLカーネルを実行
+    q.submit([&](handler& h) {
+        // ワークグループサイズの最適化 (64はGPUやCPUで一般的に良いサイズ)
+        h.parallel_for(nd_range<1>(range<1>(output_size), range<1>(64)), [=](nd_item<1> item) {
+            int i = item.get_global_id(0);
+            if (i < output_size) {
+                float sum = bias[i];  // バイアスを初期値として使用
+                // ループアンロールを試みる
+                #pragma unroll 4
+                for (int j = 0; j < input_size; j++) {
+                    sum += input[j] * weights[i * input_size + j];  // 重み行列と入力ベクトルの積
+                }
+                output[i] = sum;  // 結果を出力
+            }
         });
     }).wait();
 }
@@ -53,16 +75,13 @@ int main() {
 
     // 実行時間の計測開始
     auto start = high_resolution_clock::now();
-
     // 推論実行
-    dense_layer(q, input, weights, bias, output, input_size, output_size);
-
+    dense_layer_optimized(q, input, weights, bias, output, input_size, output_size);
     // 実行時間の計測終了
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
-    
     // 実行時間を表示
-    std::cout << "実行時間(オリジナル): " << duration << " microseconds" << std::endl;
+    std::cout << "実行時間（最適化）: " << duration << " microseconds" << std::endl;
 
     // 結果を表示
     std::cout << "Output: ";
