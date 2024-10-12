@@ -18,9 +18,8 @@ void dense_layer_optimized(
     // SYCLカーネルを実行
     q.submit([&](handler& h) {
         // ワークグループサイズの最適化 (64はGPUやCPUで一般的に良いサイズ)
-        // h.parallel_for(nd_range<1>(range<1>(output_size), range<1>(64)), [=](nd_item<1> item) {
-        h.parallel_for(range<1>(output_size), [=](id<1> idx) {
-            int i = idx[0];
+        h.parallel_for(nd_range<1>(range<1>(output_size), range<1>(64)), [=](nd_item<1> item) {
+            int i = item.get_global_id(0);
             if (i < output_size) {
                 float sum = bias[i];  // バイアスを初期値として使用
                 // ループアンロールを試みる
@@ -41,16 +40,12 @@ int main() {
 
     // ネットワークパラメータの定義
     const int input_size = 4;
-    const int output_size = 3;
+    const int output_size = 512;
 
     // データを定義（例として固定の値を使用）
     std::vector<float> input_data = {1.0, 2.0, 3.0, 4.0};
-    std::vector<float> weights_data = {
-        0.2, 0.8, -0.5, 1.0,  // Neuron 1 weights
-        0.5, -0.91, 0.26, -0.5, // Neuron 2 weights
-        -0.26, -0.27, 0.17, 0.87 // Neuron 3 weights
-    };
-    std::vector<float> bias_data = {2.0, 3.0, 0.5};  // バイアス値
+    std::vector<float> weights_data(input_size * output_size, 0.5f);  // 4x512の重み行列を0.5で初期化
+    std::vector<float> bias_data(output_size, 1.0f);  // バイアス値を1で初期化
     std::vector<float> output_data(output_size, 0.0);  // 出力データを初期化
 
     // USMでメモリを確保
