@@ -37,7 +37,7 @@ int main() {
     // ネットワークパラメータの定義
     const int input_size = 4;
     const int output_size = 512;
-    const int num_iterations = 1000;  // 実行回数
+    const int num_iterations = 10000;  // 実行回数
 
     // データを定義（例として固定の値を使用）
     std::vector<float> input_data = {1.0, 2.0, 3.0, 4.0};

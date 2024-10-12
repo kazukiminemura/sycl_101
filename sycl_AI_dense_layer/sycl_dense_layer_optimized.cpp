@@ -18,8 +18,9 @@ void dense_layer_optimized(
                             int output_size) {
     // SYCLカーネルを実行
     q.submit([&](handler& h) {
-        // ワークグループサイズの最適化 (64はGPUやCPUで一般的に良いサイズ)
-        h.parallel_for(nd_range<1>(range<1>(output_size), range<1>(64)), [=](nd_item<1> item) {
+        // ワークグループサイズの最適化
+        h.parallel_for(nd_range<1>(output_size, 512), 
+                    [=](nd_item<1> item) {
             int i = item.get_global_id(0);
             if (i < output_size) {
                 float sum = bias[i];  // バイアスを初期値として使用
@@ -42,7 +43,7 @@ int main() {
     // ネットワークパラメータの定義
     const int input_size = 4;
     const int output_size = 512;
-    const int num_iterations = 1000;  // 実行回数
+    const int num_iterations = 10000;  // 実行回数
 
     // データを定義（例として固定の値を使用）
     std::vector<float> input_data = {1.0, 2.0, 3.0, 4.0};
