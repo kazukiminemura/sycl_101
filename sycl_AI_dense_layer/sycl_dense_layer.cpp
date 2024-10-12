@@ -55,6 +55,9 @@ int main() {
     std::copy(weights_data.begin(), weights_data.end(), weights);
     std::copy(bias_data.begin(), bias_data.end(), bias);
 
+    // 推論実行(warm-up)
+    dense_layer(q, input, weights, bias, output, input_size, output_size);
+
     // 実行時間の計測開始
     auto start = high_resolution_clock::now();
     // 推論実行
