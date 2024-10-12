@@ -7,7 +7,14 @@ using namespace sycl;
 using namespace std::chrono;  // 実行時間計測に便利なstd::chrono名前空間
 
 // 簡単なAI推論の例（1層のDense Layer）
-void dense_layer(queue& q, float* input, float* weights, float* bias, float* output, int input_size, int output_size) {
+void dense_layer(
+                queue& q,
+                float* input,
+                float* weights,
+                float* bias,
+                float* output,
+                int input_size,
+                int output_size) {
     // SYCLカーネルを実行
     q.submit([&](handler& h) {
         h.parallel_for(range<1>(output_size), [=](id<1> idx) {
@@ -53,10 +60,8 @@ int main() {
 
     // 実行時間の計測開始
     auto start = high_resolution_clock::now();
-
     // 推論実行
     dense_layer(q, input, weights, bias, output, input_size, output_size);
-
     // 実行時間の計測終了
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();

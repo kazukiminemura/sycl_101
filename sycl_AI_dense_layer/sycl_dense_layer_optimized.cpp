@@ -6,30 +6,21 @@
 using namespace sycl;
 using namespace std::chrono;  // 実行時間計測に便利なstd::chrono名前空間
 
-
 // 簡単なAI推論の例（1層のDense Layer）
-void dense_layer(queue& q, float* input, float* weights, float* bias, float* output, int input_size, int output_size) {
-    // SYCLカーネルを実行
-    q.submit([&](handler& h) {
-        h.parallel_for(range<1>(output_size), [=](id<1> idx) {
-            int i = idx[0];
-            float sum = bias[i];  // バイアスを初期値として使用
-            for (int j = 0; j < input_size; j++) {
-                sum += input[j] * weights[i * input_size + j];  // 重み行列と入力ベクトルの積
-            }
-            output[i] = sum;  // 結果を出力
-        });
-    }).wait();
-}
-
-
-// 簡単なAI推論の例（1層のDense Layer）
-void dense_layer_optimized(queue& q, float* input, float* weights, float* bias, float* output, int input_size, int output_size) {
+void dense_layer_optimized(
+                            queue& q,
+                            float* input,
+                            float* weights,
+                            float* bias,
+                            float* output,
+                            int input_size,
+                            int output_size) {
     // SYCLカーネルを実行
     q.submit([&](handler& h) {
         // ワークグループサイズの最適化 (64はGPUやCPUで一般的に良いサイズ)
-        h.parallel_for(nd_range<1>(range<1>(output_size), range<1>(64)), [=](nd_item<1> item) {
-            int i = item.get_global_id(0);
+        // h.parallel_for(nd_range<1>(range<1>(output_size), range<1>(64)), [=](nd_item<1> item) {
+        h.parallel_for(range<1>(output_size), [=](id<1> idx) {
+            int i = idx[0];
             if (i < output_size) {
                 float sum = bias[i];  // バイアスを初期値として使用
                 // ループアンロールを試みる
