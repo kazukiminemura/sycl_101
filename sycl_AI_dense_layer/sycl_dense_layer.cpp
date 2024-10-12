@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>  // 実行時間を計測するために追加
+#include <numeric> // 平均計算用
 
 using namespace sycl;
 using namespace std::chrono;  // 実行時間計測に便利なstd::chrono名前空間
@@ -36,6 +37,7 @@ int main() {
     // ネットワークパラメータの定義
     const int input_size = 4;
     const int output_size = 512;
+    const int num_iterations = 1000;  // 実行回数
 
     // データを定義（例として固定の値を使用）
     std::vector<float> input_data = {1.0, 2.0, 3.0, 4.0};
@@ -58,16 +60,27 @@ int main() {
     // 推論実行(warm-up)
     dense_layer(q, input, weights, bias, output, input_size, output_size);
 
-    // 実行時間の計測開始
-    auto start = high_resolution_clock::now();
-    // 推論実行
-    dense_layer(q, input, weights, bias, output, input_size, output_size);
-    // 実行時間の計測終了
-    auto end = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(end - start).count();
+    // 複数回の実行を計測
+    std::vector<long long> durations(num_iterations);  // 実行時間を格納するベクトル
+    for (int iter = 0; iter < num_iterations; iter++) {
+        // 実行時間の計測開始
+        auto start = high_resolution_clock::now();
+        // 推論実行
+        dense_layer(q, input, weights, bias, output, input_size, output_size);
+        // 実行時間の計測終了
+        auto end = high_resolution_clock::now();
+        durations[iter] = duration_cast<microseconds>(end - start).count();
     
-    // 実行時間を表示
-    std::cout << "実行時間(オリジナル): " << duration << " microseconds" << std::endl;
+        // // 各実行時間を表示
+        // std::cout << "実行時間(オリジナル): " << duration << " microseconds" << std::endl;
+    }
+
+    // 実行時間の平均を計算
+    long long total_duration = std::accumulate(durations.begin(), durations.end(), 0LL);
+    double average_duration = static_cast<double>(total_duration) / num_iterations;
+
+    // 平均実行時間を表示
+    std::cout << "Average execution time over " << num_iterations << " iterations: " << average_duration << " microseconds" << std::endl;
 
     // 結果を表示
     std::cout << "Output: ";
