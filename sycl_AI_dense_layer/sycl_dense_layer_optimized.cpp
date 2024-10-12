@@ -20,7 +20,7 @@ void dense_layer_optimized(
     q.submit([&](handler& h) {
         // ワークグループサイズの最適化
         h.parallel_for(nd_range<1>(output_size, 512), 
-                    [=](nd_item<1> item) {
+                    [=](nd_item<1> item) [[intel::reqd_sub_group_size(32)]]{
             int i = item.get_global_id(0);
             if (i < output_size) {
                 float sum = bias[i];  // バイアスを初期値として使用
@@ -42,8 +42,8 @@ int main() {
 
     // ネットワークパラメータの定義
     const int input_size = 4;
-    const int output_size = 512;
-    const int num_iterations = 10000;  // 実行回数
+    const int output_size = 1024*1024;
+    const int num_iterations = 1000;  // 実行回数
 
     // データを定義（例として固定の値を使用）
     std::vector<float> input_data = {1.0, 2.0, 3.0, 4.0};
@@ -85,14 +85,14 @@ int main() {
     double average_duration = static_cast<double>(total_duration) / num_iterations;
 
     // 平均実行時間を表示
-    std::cout << "Average execution time over " << num_iterations << " iterations: " << average_duration << " microseconds" << std::endl;
+    std::cout << "Average execution time (optimized) over " << num_iterations << " iterations: " << average_duration << " microseconds" << std::endl;
 
-    // 結果を表示
-    std::cout << "Output: ";
-    for (int i = 0; i < output_size; i++) {
-        std::cout << output[i] << " ";
-    }
-    std::cout << std::endl;
+    // // 結果を表示
+    // std::cout << "Output: ";
+    // for (int i = 0; i < output_size; i++) {
+    //     std::cout << output[i] << " ";
+    // }
+    // std::cout << std::endl;
 
     // メモリを解放
     free(input, q);
