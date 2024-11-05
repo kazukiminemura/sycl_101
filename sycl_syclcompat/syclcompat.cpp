@@ -5,8 +5,7 @@
 namespace sc = syclcompat;
 
 // Kernel function for vector addition
-void vector_add(const float *a, const float *b, float *c, int n) {\
-    sycl::queue q;
+void vector_add(const float *a, const float *b, float *c, int n, sycl::queue& q) {
     q.submit([&](sycl::handler& h){
         h.parallel_for(sycl::range<1>(n), [=](sycl::id<1> idx) {
             int i = idx[0];
@@ -37,15 +36,17 @@ int main() {
     float *d_b = sycl::malloc_device<float>(N, sc::get_default_queue());
     float *d_c = sycl::malloc_device<float>(N, sc::get_default_queue());
 
+    sycl::queue q;
+
     // Copy data from host to device
-    memcpy(d_a, h_a, bytes);
-    memcpy(d_b, h_b, bytes);
+    q.memcpy(d_a, h_a, bytes);
+    q.memcpy(d_b, h_b, bytes);
 
     // Launch kernel using syclcompat
-    vector_add(d_a, d_b, d_c, N);
+    vector_add(d_a, d_b, d_c, N, q);
 
     // Copy result back to host
-    memcpy(h_c, d_c, bytes);
+    q.memcpy(h_c, d_c, bytes);
 
     // Wait for device to finish all operations
     sc::get_default_queue().wait();
