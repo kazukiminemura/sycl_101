@@ -1,6 +1,5 @@
 # Compile command (need to specify libonedal files)
-`icpx -fsycl -I./ -lonedal_dpc -lonedal_parameters_dpc -loneda
-l_core -lonedal_thread sample.cpp`
+`icpx -fsycl -I./ -lonedal_dpc -lonedal_parameters_dpc -lonedal_core -lonedal_thread sample.cpp`
 
 ```
 $ ./a.out 
