@@ -4,11 +4,17 @@
 
 namespace sc = syclcompat;
 
-__global__ void vector_add(const float *a, const float *b, float *c, int n) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < n) {
-        c[idx] = a[idx] + b[idx];
-    }
+// Kernel function for vector addition
+void vector_add(const float *a, const float *b, float *c, int n) {\
+    sycl::queue q;
+    q.submit([&](sycl::handler& h){
+        h.parallel_for(sycl::range<1>(n), [=](sycl::id<1> idx) {
+            int i = idx[0];
+            if (i < n) {
+                c[i] = a[i] + b[i];
+            }
+        });
+    });
 }
 
 int main() {
@@ -27,27 +33,22 @@ int main() {
     }
 
     // Device memory allocation using syclcompat
-    float *d_a, *d_b, *d_c;
-    sc::malloc((void **)&d_a, bytes);
-    sc::malloc((void **)&d_b, bytes);
-    sc::malloc((void **)&d_c, bytes);
+    float *d_a = sycl::malloc_device<float>(N, sc::get_default_queue());
+    float *d_b = sycl::malloc_device<float>(N, sc::get_default_queue());
+    float *d_c = sycl::malloc_device<float>(N, sc::get_default_queue());
 
     // Copy data from host to device
-    sc::memcpy(d_a, h_a, bytes);
-    sc::memcpy(d_b, h_b, bytes);
-
-    // Kernel execution configuration
-    int threads_per_block = 256;
-    int blocks_per_grid = (N + threads_per_block - 1) / threads_per_block;
+    memcpy(d_a, h_a, bytes);
+    memcpy(d_b, h_b, bytes);
 
     // Launch kernel using syclcompat
-    sc::launch_kernel(vector_add, blocks_per_grid, threads_per_block, d_a, d_b, d_c, N);
+    vector_add(d_a, d_b, d_c, N);
 
     // Copy result back to host
-    sc::memcpy(h_c, d_c, bytes);
+    memcpy(h_c, d_c, bytes);
 
     // Wait for device to finish all operations
-    sc::device_synchronize();
+    sc::get_default_queue().wait();
 
     // Check results
     bool success = true;
@@ -65,13 +66,12 @@ int main() {
     }
 
     // Free device and host memory
-    sc::free(d_a);
-    sc::free(d_b);
-    sc::free(d_c);
+    sc::free(d_a, sc::get_default_queue());
+    sc::free(d_b, sc::get_default_queue());
+    sc::free(d_c, sc::get_default_queue());
     free(h_a);
     free(h_b);
     free(h_c);
 
     return 0;
 }
-
