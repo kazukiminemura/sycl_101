@@ -24,7 +24,7 @@ dpctは自動変換を行いますが、完全ではない場合があります�
 変換後のコードを確認し、必要に応じて手動で修正します。  
 ### 4. ビルドと実行    
 変換後のコードをビルドするには、DPC++コンパイラを使用します。   
-`icpx -fsycl cuda2sycl.dp.cpp -o cuda2sycl_add`
+`icpx -fsycl cuda2sycl.dp.cpp -o cuda2sycl`
 プログラムを実行して、正しく動作することを確認します。  
 ```
 ./cuda2sycl
