@@ -27,7 +27,7 @@ int main()
     // Print result
     for (int i = 0; i < 1024; i++)
     {
-        std::cout <<''data[''<< i << ''] = '' << data[i] << std::endl;
+        std::cout <<"data["<< i << "] = " << data[i] << std::endl;
     }
     return 0;
 }
