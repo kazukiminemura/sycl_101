@@ -20,8 +20,8 @@ ex. Windows環境では以下のコマンドでコンパイル
 lib /OUT:libsycl_vector_add.lib sycl_vector_add.obj
 icx-cl -fsycl main.c libsycl_vector_add.lib -o main.exe```  
 
-  
-## 実行結果
+
+## 実行結果  
 ``` Vector Addition Results:
 c[0] = 0.000000
 c[1] = 3.000000
