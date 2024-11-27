@@ -30,19 +30,24 @@ endif()
 # Add the SYCL shared library
 add_library(sycl_vector_add SHARED sycl_vector_add.cpp)
 
+# Set the library output name
+set_target_properties(sycl_vector_add PROPERTIES
+    OUTPUT_NAME "sycl_vector_add"
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+
 # Add the main C program and link the SYCL library
 add_executable(main_exec main.c)
 target_link_libraries(main_exec PRIVATE sycl_vector_add)
-
-# Set output directory for executables and libraries
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Handle runtime library paths for Windows
 if(WIN32)
     add_custom_command(
         TARGET main_exec POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:sycl_vector_add> $<TARGET_FILE_DIR:main_exec>
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:main_exec> $<TARGET_FILE_DIR:main_exec> COMMAND_EXPAND_LISTS
     )
 else()
     set_target_properties(main_exec PROPERTIES INSTALL_RPATH "$ORIGIN")
