@@ -3,7 +3,7 @@
 
 int main() {
     const int N = 10;
-    float a[N], b[N], c[N];
+    float a[10], b[10], c[10];
 
     // ベクトルの初期化
     for (int i = 0; i < N; i++) {
