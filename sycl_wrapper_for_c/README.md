@@ -8,7 +8,7 @@ SYCLはC++ベースの標準ですが、CからSYCLコードを呼び出すこ�
 ```icpx -fsycl -shared -o libsycl_vector_add.so sycl_vector_add.cpp```      
 
 2. Cコードをコンパイル: Cコード（main.c）をコンパイルします。   
-```gcc main.c -L. -lsycl_vector_add -o main```
+```gcc main.c -L. -lsycl_vector_add -o main```  
 -L.: カレントディレクトリから共有ライブラリを検索。     
 -lsycl_vector_add: libsycl_vector_add.soをリンク。  
 
