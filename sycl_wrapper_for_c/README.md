@@ -15,6 +15,11 @@ SYCLはC++ベースの標準ですが、CからSYCLコードを呼び出すこ�
 3. 実行: 実行可能ファイルを実行します。   
 ```./main```
 
+ex. Windows環境では以下のコマンドでコンパイル
+```icx-cl -fsycl -c sycl_vector_add.cpp -o sycl_vector_add.obj
+lib /OUT:libsycl_vector_add.lib sycl_vector_add.obj
+icx-cl -fsycl main.c libsycl_vector_add.lib -o main.exe```
+
 ## 実行結果
 ``` Vector Addition Results:
 c[0] = 0.000000
