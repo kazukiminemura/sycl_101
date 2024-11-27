@@ -4,13 +4,14 @@ SYCLはC++ベースの標準ですが、CからSYCLコードを呼び出すこ�
 これはSYCLの基本的なベクトル加算をCから呼び出すサンプルコードです。 
 
 ## コンパイルと実行
-1. SYCL C++コードをコンパイル: SYCLコード（sycl_vector_add.cpp）をコンパイルします。icpxを使って共有ライブラリとしてコンパイルします。
+1. SYCL C++コードをコンパイル: SYCLコード（sycl_vector_add.cpp）をコンパイルします。icpxを使って共有ライブラリとしてコンパイルします。   
+```icpx -fsycl -shared -o libsycl_vector_add.so sycl_vector_add.cpp```      
 
-```icpx -fsycl -shared -o libsycl_vector_add.so sycl_vector_add.cpp```
 2. Cコードをコンパイル: Cコード（main.c）をコンパイルします。   
 ```gcc main.c -L. -lsycl_vector_add -o main```
 -L.: カレントディレクトリから共有ライブラリを検索。     
 -lsycl_vector_add: libsycl_vector_add.soをリンク。  
+
 3. 実行: 実行可能ファイルを実行します。 
 ```./main```
 
