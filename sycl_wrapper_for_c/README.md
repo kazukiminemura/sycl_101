@@ -5,7 +5,7 @@ SYCLはC++ベースの標準ですが、CからSYCLコードを呼び出すこ�
 
 ## コンパイルと実行
 1. SYCL C++コードをコンパイル: SYCLコード（sycl_vector_add.cpp）をコンパイルします。icpxを使って共有ライブラリとしてコンパイルします。   
-```icpx -fsycl -shared -o libsycl_vector_add.so sycl_vector_add.cpp```      
+```icpx -fsycl -fPIC -shared -o libsycl_vector_add.so sycl_vector_add.cpp```      
 
 2. Cコードをコンパイル: Cコード（main.c）をコンパイルします。   
 ```icx main.c -L. -lsycl_vector_add -o main```  
