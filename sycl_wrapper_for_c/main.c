@@ -1,7 +1,5 @@
 #include <stdio.h>
-
-// SYCLの関数を呼び出すための宣言
-extern void vector_add(const float *a, const float *b, float *c, int n);
+#include "sycl_vector_add"
 
 int main() {
     const int N = 10;
