@@ -21,9 +21,6 @@ set(C_SOURCE main.c)
 # Create the SYCL library
 add_library(sycl_vector_add STATIC ${SYCL_SOURCE})
 
-# Set the compiler options for SYCL
-target_compile_options(sycl_vector_add PRIVATE -fsycl)
-
 # Link the SYCL library with the SYCL runtime
 target_link_libraries(sycl_vector_add PRIVATE sycl)
 
