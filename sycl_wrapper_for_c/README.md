@@ -13,7 +13,10 @@ SYCLはC++ベースの標準ですが、CからSYCLコードを呼び出すこ�
 -lsycl_vector_add: libsycl_vector_add.soをリンク。  
 
 3. 実行: 実行可能ファイルを実行します。   
-```./main```
+```
+export LD_LIBRARY_PATH=./:$LD_LIBRARY_PATH
+./main
+```
 
 ex. Windows環境では以下のコマンドでコンパイル  
 ```
