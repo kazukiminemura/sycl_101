@@ -8,8 +8,9 @@ project(SyclWrapperSample LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Find the Intel oneAPI DPC++/C++ Compiler
-find_package(IntelSYCL REQUIRED)
+# Set the Intel oneAPI DPC++/C++ Compiler
+set(CMAKE_CXX_COMPILER "icx")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl")
 
 # Add the SYCL source file
 set(SYCL_SOURCE sycl_vector_add.cpp)
