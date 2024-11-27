@@ -17,11 +17,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 # Define the shared library name based on the platform
-#if(WIN32)
-#    set(LIBRARY_NAME sycl_vector_add.dll)
-#else()
-#    set(LIBRARY_NAME libsycl_vector_add.so)
-#endif()
+if(WIN32)
+    set(LIBRARY_NAME sycl_vector_add.dll)
+else()
+    set(LIBRARY_NAME libsycl_vector_add.so)
+endif()
 
 # Add the SYCL shared library
 add_library(sycl_vector_add SHARED sycl_vector_add.cpp)
