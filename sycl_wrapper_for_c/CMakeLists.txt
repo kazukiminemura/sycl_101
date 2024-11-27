@@ -4,12 +4,16 @@ cmake_minimum_required(VERSION 3.21)
 # Project name and languages
 project(SyclWrapperSample LANGUAGES C CXX)
 
-# Set the SYCL compiler (Intel DPC++)
-set(CMAKE_CXX_COMPILER icpx)
-set(CMAKE_C_COMPILER icx)
+
+
+# Use Intel DPC++/C++ Compiler (Visual Studio-compatible)
 if(MSVC)
     set(CMAKE_CXX_COMPILER icx-cl)
     set(CMAKE_C_COMPILER icx-cl)
+else()
+# Set the SYCL compiler (Intel DPC++)
+    set(CMAKE_CXX_COMPILER icpx)
+    set(CMAKE_C_COMPILER icx)    
 endif()
 
 # Enable SYCL support for the compiler
