@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "sycl_vector_add"
+#include "sycl_vector_add.h"
 
 int main() {
     const int N = 10;
