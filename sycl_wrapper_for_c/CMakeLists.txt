@@ -1,35 +1,20 @@
-# Minimum CMake version required
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.10)
+project(SYCLProject)
 
-# Project name and languages
-project(SyclWrapperSample LANGUAGES C CXX)
+# Set the compiler to use Intel's DPC++/SYCL compiler
+set(CMAKE_CXX_COMPILER icx-cl)
+set(CMAKE_C_COMPILER icx-cl)
 
-# Set the C++ standard
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+# Add the SYCL source files and create static libraries
+add_library(sycl_vector_add STATIC sycl_vector_add.cpp)
+target_compile_options(sycl_vector_add PRIVATE -fsycl)
 
-# Set the Intel oneAPI DPC++/C++ Compiler
-set(CMAKE_CXX_COMPILER "icx")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl")
+add_library(sycl_wrapper STATIC sycl_wrapper.c)
 
-# Add the SYCL source file
-set(SYCL_SOURCE sycl_vector_add.cpp)
+# Compile the main source file into an object file
+add_library(main_obj OBJECT main.c)
 
-# Add the C source file
-set(C_SOURCE main.c)
-
-# Create the SYCL library
-add_library(sycl_vector_add STATIC ${SYCL_SOURCE})
-
-# Link the SYCL library with the SYCL runtime
-target_link_libraries(sycl_vector_add PRIVATE sycl)
-
-# Create the executable
-add_executable(main ${C_SOURCE})
-
-# Link the executable with the SYCL library
-target_link_libraries(main PRIVATE sycl_vector_add)
-
-# Include directories for SYCL
-target_include_directories(sycl_vector_add PRIVATE ${CMAKE_SOURCE_DIR})
-target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR})
+# Create the main executable and link with the -fsycl flag
+add_executable(main $<TARGET_OBJECTS:main_obj>)
+target_link_options(main PRIVATE -fsycl)
+target_link_libraries(main PRIVATE sycl_wrapper sycl_vector_add)
