@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-void vector_add(const float* A, const float* B, float* C, size_t n);
+void vector_add(const float* A, const float* B, float* C, int n);
 
 #ifdef __cplusplus
 }
