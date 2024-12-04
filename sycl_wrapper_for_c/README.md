@@ -23,7 +23,13 @@ ex. Windows環境では以下のコマンドでコンパイル
 icx-cl -fsycl -c sycl_vector_add.cpp -o sycl_vector_add.obj    
 lib /OUT:libsycl_vector_add.lib sycl_vector_add.obj    
 icx-cl -fsycl main.c libsycl_vector_add.lib -o main.exe    
-```  
+```
+cmakeの場合は
+```
+mkdir build; cd build
+cmake .. -GNinja
+cmake --build .
+```
 
 
 ## 実行結果  
