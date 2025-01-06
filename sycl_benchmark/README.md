@@ -1,7 +1,7 @@
 # 実行手順
 ## コンパイル
 Intel oneAPI DPC++ コンパイラ (icpx) を使用します。  
-```icpx -fsycl -O2 -o gpu_benchmark gpu_benchmark.cpp```
+```icpx -fsycl -fsycl-targets=nvptx64-nvidia-cuda -O2 -o gpu_benchmark gpu_benchmark.cpp```
 ## 実行
 実行してGPU性能を計測します。
 ./gpu_benchmark
