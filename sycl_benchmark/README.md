@@ -1,6 +1,6 @@
 # 実行手順
 ## コンパイル
-Intel oneAPI DPC++ コンパイラ (icpx) を使用します。
+Intel oneAPI DPC++ コンパイラ (icpx) を使用します。  
 ```icpx -fsycl -O2 -o gpu_benchmark gpu_benchmark.cpp```
 ## 実行
 実行してGPU性能を計測します。
@@ -13,8 +13,8 @@ Execution time: 0.056732 seconds
 Bandwidth: 7.64 GB/s
 Sample result: 3 3 3 3 3 3 3 3 3 3
 ```
-Execution time: ベクトル加算にかかった時間。
-Bandwidth: データ転送と計算の合計でのメモリ帯域幅。
+Execution time: ベクトル加算にかかった時間。  
+Bandwidth: データ転送と計算の合計でのメモリ帯域幅。  
 Sample result: 計算結果（ここではすべて 1.0 + 2.0 = 3.0）。
 
 # カスタマイズ
