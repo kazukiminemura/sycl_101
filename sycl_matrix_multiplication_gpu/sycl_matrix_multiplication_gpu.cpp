@@ -21,38 +21,41 @@ void matrix_multiply(queue &q, const float *A, const float *B, float *C, size_t 
     // カーネルの実行
     auto start = std::chrono::high_resolution_clock::now();
 
-    q.submit([&](handler &h) {
-        // 共有メモリの定義
-        accessor<float, 2, access::mode::read_write, access::target::local> tile_A({TILE_SIZE, TILE_SIZE}, h);
-        accessor<float, 2, access::mode::read_write, access::target::local> tile_B({TILE_SIZE, TILE_SIZE}, h);
+    size_t iterations = 100; // 繰り返し回数（必要に応じて調整）
+    for (size_t iter = 0; iter < iterations; ++iter) {
+        q.submit([&](handler &h) {
+            // 共有メモリの定義
+            accessor<float, 2, access::mode::read_write, access::target::local> tile_A({TILE_SIZE, TILE_SIZE}, h);
+            accessor<float, 2, access::mode::read_write, access::target::local> tile_B({TILE_SIZE, TILE_SIZE}, h);
 
-        h.parallel_for(nd_range<2>({N, N}, {TILE_SIZE, TILE_SIZE}), [=](nd_item<2> item) {
-            size_t row = item.get_global_id(0);
-            size_t col = item.get_global_id(1);
+            h.parallel_for(nd_range<2>({N, N}, {TILE_SIZE, TILE_SIZE}), [=](nd_item<2> item) {
+                size_t row = item.get_global_id(0);
+                size_t col = item.get_global_id(1);
 
-            float sum = 0.0f;
+                float sum = 0.0f;
 
-            for (size_t t = 0; t < N / TILE_SIZE; ++t) {
-                // タイルを共有メモリにロード
-                tile_A[item.get_local_id(0)][item.get_local_id(1)] =
-                    d_A[row * N + t * TILE_SIZE + item.get_local_id(1)];
-                tile_B[item.get_local_id(0)][item.get_local_id(1)] =
-                    d_B[(t * TILE_SIZE + item.get_local_id(0)) * N + col];
+                for (size_t t = 0; t < N / TILE_SIZE; ++t) {
+                    // タイルを共有メモリにロード
+                    tile_A[item.get_local_id(0)][item.get_local_id(1)] =
+                        d_A[row * N + t * TILE_SIZE + item.get_local_id(1)];
+                    tile_B[item.get_local_id(0)][item.get_local_id(1)] =
+                        d_B[(t * TILE_SIZE + item.get_local_id(0)) * N + col];
 
-                item.barrier(access::fence_space::local_space);
+                    item.barrier(access::fence_space::local_space);
 
-                // タイル内で計算
-                for (size_t k = 0; k < TILE_SIZE; ++k) {
-                    sum += tile_A[item.get_local_id(0)][k] * tile_B[k][item.get_local_id(1)];
+                    // タイル内で計算
+                    for (size_t k = 0; k < TILE_SIZE; ++k) {
+                        sum += tile_A[item.get_local_id(0)][k] * tile_B[k][item.get_local_id(1)];
+                    }
+
+                    item.barrier(access::fence_space::local_space);
                 }
 
-                item.barrier(access::fence_space::local_space);
-            }
-
-            // 結果を出力
-            d_C[row * N + col] = sum;
-        });
-    }).wait();
+                // 結果を出力
+                d_C[row * N + col] = sum;
+            });
+        }).wait();
+    }
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = end - start;
@@ -70,7 +73,7 @@ void matrix_multiply(queue &q, const float *A, const float *B, float *C, size_t 
 }
 
 int main() {
-    constexpr size_t N = 1024; // 行列のサイズ (N x N)
+    constexpr size_t N = 2048; // 行列のサイズ (N x N)
 
     // 行列の初期化
     std::vector<float> A(N * N, 1.0f); // 行列A (全て1.0)
