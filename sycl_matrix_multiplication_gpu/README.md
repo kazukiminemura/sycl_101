@@ -139,17 +139,8 @@ accessor を使用して共有メモリにタイルデータを格納し、メ�
 # 実行手順
 ## コンパイル
 ```
-icpx -fsycl -O2 -o matrix_multiply matrix_multiply.cpp
+icpx -fsycl -O2 -o sycl_matrix_multiply_gpu sycl_matrix_multiply_gpu.cpp
 ```
 
 ## 実行
 ``` ./matrix_multiply ```
-
-# 出力例
-```
-Running on: NVIDIA GeForce RTX 3060
-Execution time: 1.542 seconds
-Result sample (first 10 elements of the first row): 1024 1024 1024 1024 1024 1024 1024 1024 1024 1024
-```
-Execution time: 行列積の実行時間。  
-Result sample: 計算結果の一部（行列の要素はすべて同じ値になる）。   
