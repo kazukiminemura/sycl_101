@@ -21,7 +21,7 @@ void matrix_multiply(queue &q, const float *A, const float *B, float *C, size_t 
     // カーネルの実行
     auto start = std::chrono::high_resolution_clock::now();
 
-    size_t iterations = 100; // 繰り返し回数（必要に応じて調整）
+    size_t iterations = 1000; // 繰り返し回数（必要に応じて調整）
     for (size_t iter = 0; iter < iterations; ++iter) {
         q.submit([&](handler &h) {
             // 共有メモリの定義
