@@ -34,7 +34,7 @@ int main() {
 }
 ```
 次に、このCUDAコードをSYCLコードに変換するためにdpctを使用します。以下のコマンドを実行します。  
-```dpct --enable-codepin cuda_example.cu```
+```dpct --enable-codepin sycl_codepin.cu```
 変換後のSYCLコードは以下のようになります。  
 ```
 #include <sycl/sycl.hpp>
