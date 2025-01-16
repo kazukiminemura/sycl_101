@@ -143,3 +143,8 @@ icpx -fsycl sycl_codepin.dp.cpp
 ビルドし、生成されたバイナリを実行すると、実行ログファイルが生成されます
 
 
+`codepin-report.py`によりCUDAとSYCLコードから生成されたログを比較できます。
+```
+codepin-report.py [-h] --instrumented-cuda-log <file path> --instrumented-sycl-log <file path> [--floating-point-comparison-epsilon <file path>]
+```
+
