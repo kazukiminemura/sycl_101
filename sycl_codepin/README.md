@@ -154,8 +154,8 @@ CodePin Random Seed, 0
 CodePin Sampling Threshold, 20
 CodePin Sampling Percent, 1
 Consistent API count, 2
-Most Time-consuming Kernel(CUDA), multiply_by_two:/nfs/site/home/kminemur/projects/codepin/test.cu:20:5:epilog, time:131.161
-Most Time-consuming Kernel(SYCL), multiply_by_two:/nfs/site/home/kminemur/projects/codepin/test.cu:20:5:prolog, time:0.0
+Most Time-consuming Kernel(CUDA), multiply_by_two:/home/kminemur/projects/codepin/test.cu:20:5:epilog, time:131.161
+Most Time-consuming Kernel(SYCL), multiply_by_two:/home/kminemur/projects/codepin/test.cu:20:5:prolog, time:0.0
 Peak Device Memory Used(CUDA), 445644800
 Peak Device Memory Used(SYCL), 540731998208
 ```
