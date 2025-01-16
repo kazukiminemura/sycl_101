@@ -74,6 +74,6 @@ dpct_output_codepin_cuda/sycl_codepin.cuとdpct_output_codepin_sycl/sycl_codepin
 nvcc test.cu
 icpx -fsycl sycl_codepin.dp.cpp
 ```
-ビルドし、生成されたバイナリを実行すると、次の実行ログファイルが生成されます
+ビルドし、生成されたバイナリを実行すると、実行ログファイルが生成されます
 
 
