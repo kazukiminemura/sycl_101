@@ -37,7 +37,7 @@ int main() {
 ```dpct --enable-codepin cuda_example.cu```
 変換後のSYCLコードは以下のようになります。  
 ```
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 #include <dpct/dpct.hpp>
 #include <iostream>
 
