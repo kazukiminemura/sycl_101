@@ -1,4 +1,5 @@
-![image](https://github.com/user-attachments/assets/8adfb1bc-85b5-4e80-aabf-64b9243d15ae)dpctは、CUDAコードをSYCLコードに変換するためのツールです。--enable-codepinオプションを使用すると、CodeplayのCodeplay ComputeCppを利用してSYCLコードを生成することができます。以下に、CUDAコードをSYCLコードに変換するサンプルを示します。
+# 使い方
+dpctは、CUDAコードをSYCLコードに変換するためのツールです。--enable-codepinオプションを使用すると、CodeplayのCodeplay ComputeCppを利用してSYCLコードを生成することができます。以下に、CUDAコードをSYCLコードに変換するサンプルを示します。
   
 まず、CUDAコードの例を示します。このコードは、配列の各要素を2倍にするものです。  
 ```
