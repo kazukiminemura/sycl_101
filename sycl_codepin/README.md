@@ -33,9 +33,12 @@ int main() {
     return 0;
 }
 ```
+## 変換
 次に、このCUDAコードをSYCLコードに変換するためにdpctを使用します。以下のコマンドを実行します。  
 ```dpct --enable-codepin sycl_codepin.cu```
 変換後のSYCLコードは以下のようになります。  
+
+### SYCL
 ```
 #include <sycl/sycl.hpp>
 #include <dpct/dpct.hpp>
@@ -80,6 +83,50 @@ dpctexp::codepin::get_ptr_size_map()[d_data] = N * sizeof(int);
         &q_ct1, "d_data", d_data, "N", N);
 q_ct1.memcpy(data, d_data, N * sizeof(int)).wait();
     dpct::dpct_free(d_data, q_ct1);
+
+    for (int i = 0; i < N; i++) std::cout << data[i] << " ";
+    std::cout << "\n";
+
+    return 0;
+}
+```
+
+### CUDA
+```
+#include <dpct/codepin/codepin.hpp>
+#include "codepin_autogen_util.hpp"
+#include <cuda_runtime.h>
+#include <iostream>
+
+__global__ void multiply_by_two(int* data, int N) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < N) {
+        data[idx] *= 2;
+    }
+}
+
+int main() {
+    const int N = 16;
+    int data[N];
+    for (int i = 0; i < N; i++) data[i] = i;
+
+    int* d_data;
+    cudaMalloc(&d_data, N * sizeof(int));
+dpctexp::codepin::get_ptr_size_map()[d_data] = N * sizeof(int);
+    cudaMemcpy(d_data, data, N * sizeof(int), cudaMemcpyHostToDevice);
+
+    dpctexp::codepin::gen_prolog_API_CP(
+        "multiply_by_two:C:/Users/kminemur/source/sycl_101/sycl_codepin/"
+        "sycl_codepin.cu:20:5",
+        0, "d_data", d_data, "N", N);
+multiply_by_two<<<1, N>>>(d_data, N);
+
+    dpctexp::codepin::gen_epilog_API_CP(
+        "multiply_by_two:C:/Users/kminemur/source/sycl_101/sycl_codepin/"
+        "sycl_codepin.cu:20:5",
+        0, "d_data", d_data, "N", N);
+cudaMemcpy(data, d_data, N * sizeof(int), cudaMemcpyDeviceToHost);
+    cudaFree(d_data);
 
     for (int i = 0; i < N; i++) std::cout << data[i] << " ";
     std::cout << "\n";
