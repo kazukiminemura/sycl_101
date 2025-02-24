@@ -1,3 +1,5 @@
+SYCLでUSM（Unified Shared Memory）とバッファアクセサを使用した際のパフォーマンスの違いを計測するコードを以下に示します。このコードは、基本的なベクトル加算を行い、USMとバッファアクセサそれぞれで実行時間を比較するものです。
+
 # Usage
 icpx -fsycl -fsycl-targets=spir64,nvptx64-nvidia-
 cuda sycl_usm_bufferaccessor_benchmark.cpp
