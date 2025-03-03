@@ -24,6 +24,9 @@ int main(){
     auto start = std::chrono::high_resolution_clock::now();    
     queue Q;
 
+    // Reason why there are three submissions?
+    // The first two are for initializing the matrices A and B, they are different matrices sizes and we want to run them in parallel.
+    // The third submission is for the actual matrix multiplication
     Q.submit([&](handler &h){
         accessor matrixA(bufA, h, write_only);
         h.parallel_for(range(M, K), [=](id<2> index) {
