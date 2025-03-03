@@ -83,14 +83,14 @@ int main(){
 
     Q.submit([&](handler &h){
         accessor matrixA(bufA, h, write_only);
-        h.parallel_for(range(M, K), [=](auto index) {
+        h.parallel_for(range(M, K), [=](id<2> index) {
             matrixA[index] = 1.0f;
         });
     });
 
     Q.submit([&](handler &h){
         accessor matrixB(bufB, h, write_only);
-        h.parallel_for(range(K, N), [=](auto index) {
+        h.parallel_for(range(K, N), [=](id<2> index) {
             matrixB[index] = 1.0f;
         });
     });
