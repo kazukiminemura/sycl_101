@@ -3,41 +3,50 @@
 
 using namespace sycl;
 
-constexpr int M = 1024;
-constexpr int N = 1024;
+constexpr int M = 512;
+constexpr int N = 256;
 constexpr int K = 1024;
 
 
 int main(){
-    float(*c_back)[K] = new float[M][K];
+    float(*c_back)[N] = new float[M][N];
+
+    // Intialize c_back
+    for (int i = 0; i < M; i++)
+        for (int j = 0; j < N; j++) c_back[i][j] = 0.0f; 
     
-    buffer<float, 2> bufA{range<2>{M, K}};
-    buffer<float, 2> bufB{range<2>{K, N}};
-    buffer bufC(reinterpret_cast<float*>(c_back), range<2>{M, N});
+    buffer<float, 2> bufA(range(M, K));
+    buffer<float, 2> bufB(range(K, N));
+    buffer bufC(reinterpret_cast<float*>(c_back), range(M, N));
     
     // Traditional matrix multiplication
     {
     auto start = std::chrono::high_resolution_clock::now();    
     queue Q;
+
+    Q.submit([&](handler &h){
+        accessor matrixA(bufA, h, write_only);
+        h.parallel_for(range(M, K), [=](auto index) {
+            matrixA[index] = 1.0f;
+        });
+    });
+
+    Q.submit([&](handler &h){
+        accessor matrixB(bufB, h, write_only);
+        h.parallel_for(range(K, N), [=](auto index) {
+            matrixB[index] = 1.0f;
+        });
+    });
+
     Q.submit([&](handler &h){
         // Traditional accessors, representing matrices in gloabl memory:
-        accessor matrixA{bufA, h};
-        accessor matrixB{bufB, h};
+        accessor matrixA{bufA, h, read_only};
+        accessor matrixB{bufB, h, read_only};
         accessor matrixC{bufC, h};
 
         int width_a = bufA.get_range()[1];
 
         // // Execute kernel.
-        // h.parallel_for(range(M, K), [=](auto index) {
-        //     // Each element of matrix a is 1.
-        //     matrixA[index] = 1.0f;
-        // });
-        // // Execute kernel.
-        // h.parallel_for(range(K, N), [=](auto index) {
-        //     // Each element of matrix a is 1.
-        //     matrixB[index] = 1.0f;
-        // });
-
         h.parallel_for(
             nd_range<2>{{M, N},{32,32}}, [=](nd_item<2> item){
                 // Indices in the global index space:
@@ -57,7 +66,7 @@ int main(){
     host_accessor h_a{bufC};
     for(int i = 0; i < M; i++){
         for(int j = 0; j < N; j++){
-            assert(h_a[i][j] == 0);
+            assert(h_a[i][j] == K);
         }
     }
 
@@ -71,6 +80,21 @@ int main(){
     auto start = std::chrono::high_resolution_clock::now();
  
     queue Q;
+
+    Q.submit([&](handler &h){
+        accessor matrixA(bufA, h, write_only);
+        h.parallel_for(range(M, K), [=](auto index) {
+            matrixA[index] = 1.0f;
+        });
+    });
+
+    Q.submit([&](handler &h){
+        accessor matrixB(bufB, h, write_only);
+        h.parallel_for(range(K, N), [=](auto index) {
+            matrixB[index] = 1.0f;
+        });
+    });
+    
     Q.submit([&](handler &h){
         // Traditional accessors, representing matrices in gloabl memory:
         accessor matrixA{bufA, h};
@@ -80,21 +104,6 @@ int main(){
         // Local accessor, for one matrix tile:
         constexpr int tile_size = 16;
         local_accessor<float> tileA{tile_size, h};
-
-        // // Execute kernel.
-        // h.parallel_for(nd_range<2>{{M, K}, {32, 32}}, [=](nd_item<2> item) {
-        //     int m = item.get_global_id()[0];
-        //     int n = item.get_global_id()[1];
-        //     // Each element of matrix a is 1.
-        //     matrixA[m][n] = 1.0f;
-        // });
-        // // Execute kernel.
-        // h.parallel_for(nd_range<2>{{M, K}, {32, 32}}, [=](nd_item<2> item) {
-        //     int m = item.get_global_id()[0];
-        //     int n = item.get_global_id()[1];
-        //     // Each element of matrix a is 1.
-        //     matrixB[m][n] = 1.0f;
-        // });
 
         h.parallel_for(
             nd_range<2>{{M, N}, {1, tile_size}}, [=](nd_item<2> item){
