@@ -23,6 +23,7 @@ int main(){
     {
     auto start = std::chrono::high_resolution_clock::now();    
     queue Q;
+    std::cout << "Device: " << Q.get_device().get_info<info::device::name>() << std::endl;
 
     // Reason why there are three submissions?
     // The first two are for initializing the matrices A and B, they are different matrices sizes and we want to run them in parallel.
@@ -154,7 +155,7 @@ int main(){
     }
 
 
-    // work_group matrix multiplication
+    // Herarchical matrix multiplication
     {
         // Intialize c_back
         for (int i = 0; i < M; i++)
