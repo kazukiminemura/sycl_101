@@ -1,4 +1,5 @@
 #include <sycl/sycl.hpp>
+#include <sycl/ext/intel/esimd.hpp>
 #include <chrono>
 
 using namespace sycl;
@@ -231,5 +232,80 @@ int main(){
         std::chrono::duration<double> duration = end - start;
         std::cout << "Hierarchical matrix multiplication: " << duration.count() << " seconds" << std::endl;
     }
+
+    // Tiled matrix multiplication with collvetive functions
+    {
+        // Intialize c_back
+        for (int i = 0; i < M; i++)
+            for (int j = 0; j < N; j++) c_back[i][j] = 0.0f; 
+            
+        auto start = std::chrono::high_resolution_clock::now();
+ 
+        queue Q;
+    
+        Q.submit([&](handler &h){
+            accessor matrixA(bufA, h, write_only);
+            h.parallel_for(range(M, K), [=](id<2> index) {
+                matrixA[index] = 1.0f;
+            });
+        });
+    
+        Q.submit([&](handler &h){
+            accessor matrixB(bufB, h, write_only);
+            h.parallel_for(range(K, N), [=](id<2> index) {
+                matrixB[index] = 1.0f;
+            });
+        });
+        
+        Q.submit([&](handler &h){
+            // Traditional accessors, representing matrices in gloabl memory:
+            accessor matrixA{bufA, h};
+            accessor matrixB{bufB, h};
+            accessor matrixC{bufC, h};
+    
+            // Local accessor, for one matrix tile:
+            constexpr int tile_size = 4;
+    
+            h.parallel_for(
+                nd_range<2>{{M, N}, {1, tile_size}}, [=](nd_item<2> item){
+                    auto sg = item.get_sub_group();
+
+                    // Indices in the global index space:
+                    int m = item.get_global_id()[0];
+                    int n = item.get_global_id()[1];
+    
+                    // Index in the local index space:
+                    int i = item.get_local_id()[1];
+    
+                    float sum = 0.0f;
+                    for (int_fast64_t kk = 0; kk < K; kk += tile_size){
+                        // Load the matrix tiel from matrixA
+                        float tileA = matrixA[m][kk + i];
+    
+                        // Perform compuation by broadcasting from the matrxi tile and
+                        // loading from matrixB in global memory. the loop variable k
+                        // describes which work-item in the sub-group to
+                        // broadcast data from.
+                        for (int k = 0; k < tile_size; ++k){
+                            sum += group_broadcast(sg, tileA, k) * matrixB[kk + k][n];
+                        }
+                    }
+                    //
+                    matrixC[m][n] = sum;
+            });
+        });
+    
+        host_accessor h_a{bufC};
+        for(int i = 0; i < M; i++){
+            for(int j = 0; j < N; j++){
+                assert(h_a[i][j] == K);
+            }
+        }
+    
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+        std::cout << "Tiled matrix multiplication with collective function: " << duration.count() << " seconds" << std::endl;
+    }
+
 
 }
