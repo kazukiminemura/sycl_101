@@ -80,6 +80,10 @@ int main(){
 
     // Tiled matrix multiplication
     {
+    // Intialize c_back
+    for (int i = 0; i < M; i++)
+        for (int j = 0; j < N; j++) c_back[i][j] = 0.0f; 
+
     auto start = std::chrono::high_resolution_clock::now();
  
     queue Q;
@@ -149,5 +153,83 @@ int main(){
     std::cout << "Tiled matrix multiplication: " << duration.count() << " seconds" << std::endl;
     }
 
+
+    // work_group matrix multiplication
+    {
+        // Intialize c_back
+        for (int i = 0; i < M; i++)
+            for (int j = 0; j < N; j++) c_back[i][j] = 0.0f; 
+            
+        auto start = std::chrono::high_resolution_clock::now();
+ 
+        queue Q;
+    
+        Q.submit([&](handler &h){
+            accessor matrixA(bufA, h, write_only);
+            h.parallel_for(range(M, K), [=](id<2> index) {
+                matrixA[index] = 1.0f;
+            });
+        });
+    
+        Q.submit([&](handler &h){
+            accessor matrixB(bufB, h, write_only);
+            h.parallel_for(range(K, N), [=](id<2> index) {
+                matrixB[index] = 1.0f;
+            });
+        });
+        
+        Q.submit([&](handler &h){
+            // Traditional accessors, representing matrices in gloabl memory:
+            accessor matrixA{bufA, h};
+            accessor matrixB{bufB, h};
+            accessor matrixC{bufC, h};
+
+            constexpr int tile_size = 16;
+            range group_size{1, tile_size};
+            range num_groups{M, N / tile_size};
+
+            h.parallel_for_work_group(num_groups, group_size, [=](group<2> group){
+                // This variable is in local memory, due to declaring it inside work-group scope.
+                float tileA[tile_size];
+
+                for (int kk = 0; kk < K; kk += tile_size){
+                    // A barrier may be inserted between scopes here
+                    // automatically, unless the compiler can prove it is not required
+
+                    // Loca the matrix tile from matrix A, and synchronize
+                    group.parallel_for_work_item([&](h_item<2> item){
+                        int m = item.get_global_id()[0];
+                        int i = item.get_local_id()[1];
+                        tileA[i] = matrixA[m][kk +  i];
+                    });
+
+                    // A barrier may be inserted between scopes here automatically,
+                    // so all work item have a consistent view of memory
+
+                    group.parallel_for_work_item([&](h_item<2> item){
+                        int m = item.get_global_id()[0];
+                        int n = item.get_global_id()[1];
+                        for (int k = 0; k < tile_size; ++k){
+                            matrixC[m][n] += tileA[k] * matrixB[kk + k][n];
+                        }
+                    });
+
+                    // A barrier gets inserted here automaticall, too
+                }
+            });
+
+        });
+
+        host_accessor h_a{bufC};
+        for(int i = 0; i < M; i++){
+            for(int j = 0; j < N; j++){
+                assert(h_a[i][j] == K);
+            }
+        }
+    
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+        std::cout << "Hierarchical matrix multiplication: " << duration.count() << " seconds" << std::endl;
+    }
 
 }
