@@ -1,5 +1,4 @@
 #include <sycl/sycl.hpp>
-#include <sycl/ext/intel/esimd.hpp>
 #include <chrono>
 
 using namespace sycl;
@@ -287,7 +286,7 @@ int main(){
                         // describes which work-item in the sub-group to
                         // broadcast data from.
                         for (int k = 0; k < tile_size; ++k){
-                            sum += group_broadcast(sg, tileA, k) * matrixB[kk + k][n];
+                            sum += group_broadcast(sg, tileA, k) * matrixB[kk + k][n]; // for general platforms
                         }
                     }
                     //
