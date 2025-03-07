@@ -8,53 +8,64 @@ constexpr int M = 16;
 int main(){
     queue q;
     std::cout << q.get_device().get_info<info::device::name>() << std::endl;
-    
-    // normal kernel
-    {
-        auto start = std::chrono::high_resolution_clock::now();
-        // buffer<int> buf{range{N}};
-        buffer<int> buf(range{N});
-        q.submit([&](handler& h){
-            accessor acc{buf, h};
-            h.parallel_for(N, [=](id<1> idx){
-                int j = idx % M;
-                acc[idx] = j;
-            });
-        });
+    std::vector<int> vec_data(N);
 
-        host_accessor host_acc{buf};
-        for(int i = 0; i < N; i++){
-            int j = i % M;
-            // std::cout << i << "-th :" << host_acc[i] << std::endl;
-            assert(host_acc[i] == j);
-            // if(host_acc[j] != i){
-            //     std::cout << "Error at index " << i << std::endl;
-            //     break;
-            // }
-        }
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> diff = end - start;
-        std::cout << "Normal kernel execution time: " << diff.count() << " seconds" << std::endl;
-    }
+    // normal kernel - can not behave as expected with normal kernel
+    // {
+    //     auto start = std::chrono::high_resolution_clock::now();
+    //     buffer<int> buf(N);
+    //     q.submit([&](handler& h){
+    //         accessor acc{buf, h};
+    //         h.parallel_for(range(N), [=](id<1> i){
+    //             acc[i] = 0;
+    //         });
+    //     });
+
+    //     q.submit([&](handler& h){
+    //         accessor acc{buf, h};
+    //         h.parallel_for(range(N), [=](id<1> i){
+    //             int j = i % M;
+    //             acc[j] += 1;
+    //         });
+    //     });
+
+    //     host_accessor host_acc{buf};
+    //     for(int i = 0; i < M; i++){
+    //         std::cout << i << "-th :" << host_acc[i] << std::endl;
+    //         // assert(host_acc[i] == N/M);
+    //     }
+    //     auto end = std::chrono::high_resolution_clock::now();
+    //     std::chrono::duration<double> diff = end - start;
+    //     std::cout << "Normal kernel execution time: " << diff.count() << " seconds" << std::endl;
+    // }
 
     // kernel with atomic_ref and buffer
     {
         auto start = std::chrono::high_resolution_clock::now();
-        buffer<int> buf(N);
+        // std::fill(vec_data.begin(), vec_data.end(), 0);
+        buffer<int> buf(vec_data);
         q.submit([&](handler& h){
             accessor acc{buf, h};
             h.parallel_for(range(N), [=](id<1> i){
+                acc[i] = 0;
+            });
+        });
+
+        q.submit([&](handler& h){
+            accessor acc{buf, h};
+            stream out(1024, 1024, h);
+            h.parallel_for(range(N), [=](id<1> i){
                 int j = i % M;
                 atomic_ref<int, memory_order::relaxed, memory_scope::system, 
-                    access::address_space::global_space> atomic_acc(acc[i]);
-                atomic_acc = j;
+                    access::address_space::global_space> atomic_acc(acc[j]);
+                atomic_acc += 1;
             });
         });
 
         host_accessor host_acc{buf};
-        for(int i = 0; i < N; i++){
-            int j = i % M;
-            assert(host_acc[i] == j);
+        for(int i = 0; i < M; i++){
+            // std::cout << host_acc[i] << std::endl;
+            assert(host_acc[i] == N/M);
         }
 
         auto end = std::chrono::high_resolution_clock::now();
@@ -66,19 +77,20 @@ int main(){
     {
         auto start = std::chrono::high_resolution_clock::now();
         int* data = malloc_shared<int>(N, q);
+        q.fill(data, 0, N);
         q.submit([&](handler& h){
             h.parallel_for(range(N), [=](id<1> i){
                 int j = i % M;
                 atomic_ref<int, memory_order::relaxed, memory_scope::system, 
-                    access::address_space::global_space> atomic_acc(data[i]);
-                atomic_acc = j;
+                    access::address_space::global_space> atomic_acc(data[j]);
+                atomic_acc += 1;
             });
         });
         q.wait();
 
-        for(int i = 0; i < N; i++){
-            int j = i % M;
-            assert(data[i] == j);
+        for(int i = 0; i < M; i++){
+            // std::cout << data[i] << std::endl;
+            assert(data[i] == N/M);
         }
 
         auto end = std::chrono::high_resolution_clock::now();
@@ -87,8 +99,6 @@ int main(){
 
         free(data, q);
     }
-
-
 
     return 0;
 }
