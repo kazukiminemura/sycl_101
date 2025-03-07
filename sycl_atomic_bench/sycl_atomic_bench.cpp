@@ -11,33 +11,34 @@ int main(){
     std::vector<int> vec_data(N);
 
     // normal kernel - can not behave as expected with normal kernel
-    // {
-    //     auto start = std::chrono::high_resolution_clock::now();
-    //     buffer<int> buf(N);
-    //     q.submit([&](handler& h){
-    //         accessor acc{buf, h};
-    //         h.parallel_for(range(N), [=](id<1> i){
-    //             acc[i] = 0;
-    //         });
-    //     });
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        buffer<int> buf(N);
+        q.submit([&](handler& h){
+            accessor acc{buf, h};
+            h.parallel_for(range(N), [=](id<1> i){
+                acc[i] = 0;
+            });
+        });
 
-    //     q.submit([&](handler& h){
-    //         accessor acc{buf, h};
-    //         h.parallel_for(range(N), [=](id<1> i){
-    //             int j = i % M;
-    //             acc[j] += 1;
-    //         });
-    //     });
+        q.submit([&](handler& h){
+            accessor acc{buf, h};
+            h.parallel_for(nd_range<1>{range<1>(N), range<1>(N)}, [=](nd_item<1> it){
+                int j = it.get_global_id() % M;
+                acc[j] += 1;
+                it.barrier();
+            });
+        });
 
-    //     host_accessor host_acc{buf};
-    //     for(int i = 0; i < M; i++){
-    //         std::cout << i << "-th :" << host_acc[i] << std::endl;
-    //         // assert(host_acc[i] == N/M);
-    //     }
-    //     auto end = std::chrono::high_resolution_clock::now();
-    //     std::chrono::duration<double> diff = end - start;
-    //     std::cout << "Normal kernel execution time: " << diff.count() << " seconds" << std::endl;
-    // }
+        host_accessor host_acc{buf};
+        for(int i = 0; i < M; i++){
+            // std::cout << i << "-th :" << host_acc[i] << std::endl;
+            assert(host_acc[i] == N/M);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff = end - start;
+        std::cout << "Normal kernel execution time: " << diff.count() << " seconds" << std::endl;
+    }
 
     // kernel with atomic_ref and buffer
     {
