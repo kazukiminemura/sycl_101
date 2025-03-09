@@ -28,6 +28,13 @@ void sequential_matrix_multiply(
     std::chrono::duration<double> diff = end - start;
     // 実行時間を表示
     std::cout << "sequential matrix multiplication: " << diff.count() << " seconds" << std::endl;
+
+    for(int m = 0; m < M; m++){
+        for(int n = 0; n < N; n++){
+            // std::cout << vecC[m*N + n] << std::endl;
+            assert(vecC[m*N + n] == K);
+        }
+    }
 }
 
 // somewhat parallel matric multiplication
@@ -39,16 +46,16 @@ void somewhat_parallel_matrix_multiply(
     queue q;
     std::cout << "Running on: " << q.get_device().get_info<info::device::name>() << std::endl;
 
-    buffer<float> bufA{vecA.size()};  // M * K elements
-    buffer<float> bufB{vecB.size()};  // K * N elements
-    buffer<float> bufC{vecC.size()};  // M * N elements
+    buffer bufA{vecA};  // M * K elements
+    buffer bufB{vecB};  // K * N elements
+    buffer bufC{vecC};  // M * N elements
     q.submit([&](handler &h) {
         accessor matrixA{bufA, h};
         accessor matrixB{bufB, h};
         accessor matrixC{bufC, h};
   
         h.parallel_for(range{static_cast<size_t>(M)}, [=](id<1> idx) {
-            int m = idx[0];
+            int m = idx;
             for (int n = 0; n < N; ++n) {
                 float sum = 0.0f;
                 for (int k = 0; k < K; ++k) {
@@ -63,6 +70,13 @@ void somewhat_parallel_matrix_multiply(
     std::chrono::duration<double> diff = end - start;
     // 実行時間を表示
     std::cout << "somewhat parallel matrix multiplication: " << diff.count() << " seconds" << std::endl;
+
+    host_accessor results{bufC};
+    for(int m = 0; m < M; m++){
+        for(int n = 0; n < N; n++){
+            assert(results[m*N + n] == (float)K);
+        }
+    }
 }
 
 // Even more parallel matrix multiplication
@@ -74,9 +88,9 @@ void even_more_parallel_matrix_multiply(
     queue q;
     // std::cout << "Running on: " << q.get_device().get_info<info::device::name>()static_cast<size_t>(M) << std::endl;
 
-    buffer<float> bufA{vecA.size()};  // M * K elements
-    buffer<float> bufB{vecB.size()};  // K * N elements
-    buffer<float> bufC{vecC.size()};  // M * N elements
+    buffer bufA{vecA};  // M * K elements
+    buffer bufB{vecB};  // K * N elements
+    buffer bufC{vecC};  // M * N elements
     q.submit([&](handler &h) {
         accessor matrixA{bufA, h};
         accessor matrixB{bufB, h};
@@ -98,6 +112,13 @@ void even_more_parallel_matrix_multiply(
     std::chrono::duration<double> diff = end - start;
     // 実行時間を表示
     std::cout << "Even more parallel matrix multiplication: " << diff.count() << " seconds" << std::endl;
+
+    host_accessor results{bufC};
+    for(int m = 0; m < M; m++){
+        for(int n = 0; n < N; n++){
+            assert(results[m*N + n] == K);
+        }
+    }
 }
 
 // Inefficient matrix multiplication
@@ -109,9 +130,9 @@ void single_workitem_per_workgroup_parallel_matrix_multiply(
     queue q;
     // std::cout << "Running on: " << q.get_device().get_info<info::device::name>() << std::endl;
 
-    buffer<float> bufA{vecA.size()};  // M * K elements
-    buffer<float> bufB{vecB.size()};  // K * N elements
-    buffer<float> bufC{vecC.size()};  // M * N elements
+    buffer bufA{vecA};  // M * K elements
+    buffer bufB{vecB};  // K * N elements
+    buffer bufC{vecC};  // M * N elements
     q.submit([&](handler &h) {
         accessor matrixA{bufA, h};
         accessor matrixB{bufB, h};
@@ -133,6 +154,13 @@ void single_workitem_per_workgroup_parallel_matrix_multiply(
     std::chrono::duration<double> diff = end - start;
     // 実行時間を表示
     std::cout << "single workitem per workgroup parallel matrix multiplication: " << diff.count() << " seconds" << std::endl;
+
+    host_accessor results{bufC};
+    for(int m = 0; m < M; m++){
+        for(int n = 0; n < N; n++){
+            assert(results[m*N + n] == K);
+        }
+    }
 }
 
 // Column first matrix multiplication: better locality
@@ -144,9 +172,9 @@ void column_parallel_matrix_multiply(
     queue q;
     // std::cout << "Running on: " << q.get_device().get_info<info::device::name>() << std::endl;
 
-    buffer<float> bufA{vecA.size()};  // M * K elements
-    buffer<float> bufB{vecB.size()};  // K * N elements
-    buffer<float> bufC{vecC.size()};  // M * N elements
+    buffer bufA{vecA};  // M * K elements
+    buffer bufB{vecB};  // K * N elements
+    buffer bufC{vecC};  // M * N elements
     q.submit([&](handler &h) {
         accessor matrixA{bufA, h};
         accessor matrixB{bufB, h};
@@ -168,6 +196,14 @@ void column_parallel_matrix_multiply(
     std::chrono::duration<double> diff = end - start;
     // 実行時間を表示
     std::cout << "column parallel matrix multiplication: " << diff.count() << " seconds" << std::endl;
+
+    host_accessor results{bufC};
+    for(int m = 0; m < M; m++){
+        for(int n = 0; n < N; n++){
+            assert(results[m*N + n] == K);
+        }
+    }
+
 }
 
 // Tiled matrix multiplication
@@ -203,7 +239,7 @@ void tiled_matrix_multiply(
 
             float sum = 0.0f;
             for (size_t t = 0; t < K; t+=TILE_SIZE) {
-                // マトリックスタイルをmatricAからローカルメモリにコピーし、すべてのワークアイテムが一貫したデータを持つようにする
+                // マトリックスタイルをmatrixAからローカルメモリにコピーし、すべてのワークアイテムが一貫したデータを持つようにする
                 tile_A[local_row] = matrixA[m * K + t + local_row];
                 item.barrier();
 
@@ -218,11 +254,17 @@ void tiled_matrix_multiply(
             matrixC[m * N + n] = sum;
         });
     }).wait();
-    
+
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = end - start;
     // 実行時間を表示
     std::cout << "Tiled matrix mulpilication: " << diff.count() << " seconds" << std::endl;
+
+    for(int m = 0; m < M; m++){
+        for(int n = 0; n < N; n++){
+            assert(matrixC[m*N + n] == K);
+        }
+    }
 
     // メモリ解放
     free(matrixA, q);
