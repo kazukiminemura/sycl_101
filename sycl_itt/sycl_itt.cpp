@@ -103,6 +103,9 @@ int main() {
     std::vector<float> B(K*N, 1.0f); // 行列B (全て1.0)
     std::vector<float> C(M*N, 0.0f); // 結果を格納する行列C
 
+    queue q;
+    std::cout << "Running on: " << q.get_device().get_info<info::device::name>()static_cast<size_t>(M) << std::endl;
+
     __itt_pt_region region1 = __itt_pt_region_create("even_more_parallel_matrix_multiply_region");
     __itt_pt_region region2 = __itt_pt_region_create("single_workitem_per_workgroup_parallel_matrix_region");
 
