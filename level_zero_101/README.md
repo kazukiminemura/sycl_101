@@ -1,6 +1,6 @@
 # 使い方
 ```
-icpx test3.cpp -lze_loader
+icpx level_zero_101.cpp.cpp -lze_loader
 ```
 
 # 結果
