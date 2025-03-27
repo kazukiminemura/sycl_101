@@ -1,6 +1,6 @@
 # 使い方
 ```
-icpx level_zero_sysman_and_sycl_101.cpp -lze_loader
+icpx level_zero_sysman_and_sycl.cpp -lze_loader
 ```
 
 # 結果
