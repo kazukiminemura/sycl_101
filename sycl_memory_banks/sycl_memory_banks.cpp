@@ -11,6 +11,9 @@ int main() {
     constexpr int LOCAL = 32;
     int *data = sycl::malloc_shared<int>(GLOBAL, q);
 
+    std::cout << "Device Name: "
+              << q.get_device().get_info<sycl::info::device::name>()
+              << std::endl;
     std::cout << "Local Memory Size for each work-group: "
             << q.get_device().get_info<sycl::info::device::local_mem_size>()
             << " Bytes" << std::endl;
