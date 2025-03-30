@@ -1,7 +1,7 @@
 # Usage
 ```
-icpx -fsycl sycl_memory_banks.cpp; ./a.ou
-``
+icpx -fsycl sycl_memory_banks.cpp
+```
 
 ```
 $ ./a.out
