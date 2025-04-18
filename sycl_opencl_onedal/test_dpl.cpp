@@ -11,33 +11,33 @@ int main() {
     const int width = 512;
     const int height = 512;
     const int channels = 1;
-    std::vector<unsigned char> imageData(width * height * channels, 128);
-    size_t imageSize = imageData.size();
+    const size_t imageSize = width * height * channels;
 
     // SYCL queue
     queue q;
-    std::cout << "Running on: " 
-              << q.get_device().get_info<info::device::name>() 
+    std::cout << "Running on: "
+              << q.get_device().get_info<info::device::name>()
               << std::endl;
 
+    // DPLではBufferは想定されていないのでUSMを使う
     {
-        // oneDPL + buffer management
-        buffer<unsigned char> imageBuffer(imageData.data(), range<1>(imageSize));
+        // USM メモリを確保（shared memory）
+        unsigned char* image = sycl::malloc_shared<unsigned char>(imageSize, q);
+
+        // 初期化
+        std::fill(image, image + imageSize, 128);
 
         // oneDPL iterator wrapper
         auto policy = oneapi::dpl::execution::make_device_policy(q);
 
-	
         oneapi::dpl::for_each(
             policy,
             oneapi::dpl::counting_iterator<size_t>(0),
             oneapi::dpl::counting_iterator<size_t>(imageSize - 2),  // 最後の2要素はblurできない
-            [=, acc = imageBuffer.get_access<sycl::access::mode::read_write>()](size_t i) {
-                acc[i] = (acc[i] + acc[i + 1] + acc[i + 2]) / 3;
+            [=](size_t i) {
+                image[i] = (image[i] + image[i + 1] + image[i + 2]) / 3;
             }
         );
-
-
     }
 
     // Save (mock)
@@ -45,4 +45,3 @@ int main() {
 
     return 0;
 }
-
