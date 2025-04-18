@@ -1,0 +1,9 @@
+#　使い方
+```
+OpenCL 
+icpx test_opencl.cpp -lOpenCL -o test_opencl; ./test_opencl
+
+SYCL
+icpx -fsycl test_sycl.cpp -o test_scyl; ./test_sycl 
+
+```
