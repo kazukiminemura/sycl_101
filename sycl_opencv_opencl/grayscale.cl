@@ -1,5 +1,12 @@
 // OpenCL kernel: grayscale.cl
-__kernel void grayscale(__global uchar4* input, __global uchar* output, int width, int height) {
+__kernel void grayscale(
+    //1st parameter input image 8bit color
+    __global uchar4 * input,
+    int input_step, int input_offset,
+    __global uchar * output,
+    int result_step, int result_offset,
+    int height, int width) {
+
     int x = get_global_id(0);
     int y = get_global_id(1);
     if (x < width && y < height) {
