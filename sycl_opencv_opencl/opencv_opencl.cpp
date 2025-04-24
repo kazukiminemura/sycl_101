@@ -25,7 +25,7 @@ int main() {
     cout << "OpenCL is " << (cv::ocl::useOpenCL() ? "enabled" : "disabled") << endl;
 
     // 入力画像を読み込んでRGBAに変換
-    Mat img = imread("input.jpg");
+    Mat img = imread("input.png");
     if (img.empty()) return -1;
     cvtColor(img, img, COLOR_BGR2RGBA);
 
@@ -64,7 +64,7 @@ int main() {
     // 出力をMatに変換して保存
     Mat result;
     uOutput.copyTo(result);
-    imwrite("grayscale_result.jpg", result);
+    imwrite("grayscale_result.png", result);
 
     cout << "Done." << endl;
     return 0;
