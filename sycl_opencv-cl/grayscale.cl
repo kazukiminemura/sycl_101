@@ -1,6 +1,5 @@
 // OpenCL kernel: grayscale.cl
 __kernel void grayscale(
-    //1st parameter input image 8bit color
     __global uchar4 * input,
     int input_step, int input_offset,
     __global uchar * output,
