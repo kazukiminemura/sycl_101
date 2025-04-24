@@ -48,10 +48,11 @@ int main() {
     // 引数をセット
     int width = img.cols;
     int height = img.rows;
+    // KernelArg::ReadWrite(umat_dst)	uchar* ptr, int step, int offset, int rows, int cols
+    // 
     kernel.args(
-        cv::ocl::KernelArg::ReadOnly(uInput),
-        cv::ocl::KernelArg::WriteOnly(uOutput),
-        width, height
+        cv::ocl::KernelArg::ReadOnlyNoSize(uInput),
+        cv::ocl::KernelArg::WriteOnly(uOutput)
     );
 
     // 実行
