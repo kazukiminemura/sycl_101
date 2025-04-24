@@ -5,25 +5,18 @@
 using namespace sycl;
 using namespace cv;
 
-// もらった関数の宣言（そのまま使う）
 void grayscale_sycl(queue& q, uchar4* input, uchar* output, int width, int height) {
-    buffer<uchar4, 1> input_buf(input, range<1>(width * height));
-    buffer<uchar, 1> output_buf(output, range<1>(width * height));
-
     q.submit([&](handler& h) {
-        auto in = input_buf.get_access<access::mode::read>(h);
-        auto out = output_buf.get_access<access::mode::write>(h);
-
         h.parallel_for(range<2>(height, width), [=](id<2> idx) {
             int y = idx[0];
             int x = idx[1];
             int i = y * width + x;
 
-            uchar4 pixel = in[i];
+            uchar4 pixel = input[i];
             uchar gray = static_cast<uchar>(
                 0.299f * pixel.x() + 0.587f * pixel.y() + 0.114f * pixel.z()
             );
-            out[i] = gray;
+            output[i] = gray;
         });
     });
 }
