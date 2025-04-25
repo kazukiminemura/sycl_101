@@ -24,15 +24,23 @@ int main() {
     cv::ocl::setUseOpenCL(true);
     cout << "OpenCL is " << (cv::ocl::useOpenCL() ? "enabled" : "disabled") << endl;
 
-    // 入力画像を読み込んでRGBAに変換
+    // 入力画像を読み
     Mat img = imread("input.png");
-    if (img.empty()) return -1;
-    cvtColor(img, img, COLOR_BGR2RGBA);
+    if (img.empty()) {
+        std::cerr << "Failed to load image.\n";
+        return -1;
+    }
+    // RGBAに変換
+    Mat rgba_img;
+    cvtColor(img, rgba_img, COLOR_BGR2RGBA);
+
+    int width = rgba_img.cols;
+    int height = rgba_img.rows;
 
     // UMatに転送（OpenCLバックエンド利用）
     UMat uInput, uOutput;
-    img.copyTo(uInput);
-    uOutput.create(img.size(), CV_8UC1);
+    rgba_img.copyTo(uInput);
+    uOutput.create(rgba_img.size(), CV_8UC1);
 
     // カーネルのソースを読み込む
     String kernelSrc = loadKernelSource("grayscale.cl");
@@ -46,8 +54,6 @@ int main() {
     cv::ocl::Kernel kernel("grayscale", program);
 
     // 引数をセット
-    int width = img.cols;
-    int height = img.rows;
     // KernelArg::ReadWrite(umat_dst)	uchar* ptr, int step, int offset, int rows, int cols
     // 
     kernel.args(
@@ -62,11 +68,10 @@ int main() {
         return -1;
     }
 
-    // 出力をMatに変換して保存
-    Mat result;
-    uOutput.copyTo(result);
-    imwrite("grayscale_cvcl.png", result);
+    // 結果をOpenCV形式に戻して保存
+    Mat gray(height, width, CV_8UC1, uOutput);
+    imwrite("grayscale_cvcl.png", gray);
 
-    cout << "Done." << endl;
+    std::cout << "Grayscale conversion on OpenCV-CL is done.\n";
     return 0;
 }
