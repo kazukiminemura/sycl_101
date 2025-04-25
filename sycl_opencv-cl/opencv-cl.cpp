@@ -65,7 +65,7 @@ int main() {
     // 出力をMatに変換して保存
     Mat result;
     uOutput.copyTo(result);
-    imwrite("grayscale_result.png", result);
+    imwrite("grayscale_cvcl.png", result);
 
     cout << "Done." << endl;
     return 0;
