@@ -69,7 +69,8 @@ int main() {
     }
 
     // 結果をOpenCV形式に戻して保存
-    Mat gray(height, width, CV_8UC1, uOutput);
+    Mat gray;
+    uOutput.copyTo(gray);
     imwrite("grayscale_cvcl.png", gray);
 
     std::cout << "Grayscale conversion on OpenCV-CL is done.\n";
