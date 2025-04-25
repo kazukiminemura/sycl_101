@@ -16,6 +16,7 @@ void grayscale_sycl(queue& q, uchar4* input, uchar* output, int width, int heigh
             uchar gray = static_cast<uchar>(
                 0.299f * pixel.x() + 0.587f * pixel.y() + 0.114f * pixel.z()
             );
+            // uchar gray = 0.0f;
             output[i] = gray;
         });
     });
@@ -28,7 +29,6 @@ int main() {
         std::cerr << "Failed to load image.\n";
         return -1;
     }
-
     // RGBAに変換
     Mat rgba_img;
     cvtColor(img, rgba_img, COLOR_BGR2RGBA);
@@ -48,7 +48,7 @@ int main() {
     grayscale_sycl(q, input_data, output_data, width, height);
     q.wait();
 
-    // 結果をOpenCV形式に戻す
+    // 結果をOpenCV形式に戻して保存
     Mat gray(height, width, CV_8UC1, output_data);
     imwrite("grayscale_sycl.png", gray);
 
@@ -56,6 +56,6 @@ int main() {
     free(input_data, q.get_context());
     free(output_data, q.get_context());
 
-    std::cout << "Grayscale conversion done.\n";
+    std::cout << "Grayscale conversion on SYCL is done.\n";
     return 0;
 }
