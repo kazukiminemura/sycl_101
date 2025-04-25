@@ -50,7 +50,7 @@ int main() {
 
     // 結果をOpenCV形式に戻す
     Mat gray(height, width, CV_8UC1, output_data);
-    imwrite("gray_output.png", gray);
+    imwrite("grayscal_sycl.png", gray);
 
     // メモリ解放
     free(input_data, q.get_context());
