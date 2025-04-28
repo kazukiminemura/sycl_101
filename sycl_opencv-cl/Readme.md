@@ -7,8 +7,8 @@ icpx -fsycl sycl.cpp -o sycl_gray `pkg-config --cflags --libs opencv4`
 ./ocl_gray; ./sycl_gray; compare -metric AE ./grayscale_cvcl.png ./grayscale_sycl.png ./difference.png
 
 OpenCL is enabled
-Done.
-Grayscale conversion done.
+Grayscale conversion on OpenCV-CL is done.
+Grayscale conversion on SYCL is done.
 0
 
 ```
