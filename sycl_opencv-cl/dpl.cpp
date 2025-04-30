@@ -9,7 +9,7 @@ using namespace sycl;
 using namespace cv;
 
 void grayscale_onedpl(queue& q, uchar4* input, uchar* output, int width, int height) {
-    // 1. Create a oneDPL policy which executes on the provided SYCL queue.
+    // 1. oneDPLポリシーを作成
     auto policy = oneapi::dpl::execution::make_device_policy(q);
     std::size_t num_pixels = width * height;
     // 2. Perform a transformation over each pixel.
@@ -19,7 +19,7 @@ void grayscale_onedpl(queue& q, uchar4* input, uchar* output, int width, int hei
         );
         return gray;
     });
-    // There is an implicit wait, so no q.wait() is needed.
+    // 暗黙的にwaitされるためq.wait()は必要ありません。
 }
 
 int main() {
