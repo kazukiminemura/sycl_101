@@ -4,7 +4,7 @@
 #include <numeric>
 
 constexpr size_t N = 1024 * 1024 * 1024;
-constexpr size_t iterations = 1000;
+constexpr size_t iterations = 10000;
 
 void stack_memory_example() {
     int data[N];
