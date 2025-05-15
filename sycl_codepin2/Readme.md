@@ -40,4 +40,17 @@ Result[3]: (2, 3, 4)
 # Codepin
 ```
 python "C:\Program Files (x86)\Intel\oneAPI\dpcpp-ct\latest\bin\codepin-report.py"  --instrumented-cuda-log <path/to/CodePin_CUDA.json> --instrumented-sycl-log <path/to/CodePin_SYCL.json>
+
+
+CodePin Summary
+Totally APIs count, 2
+Consistently APIs count, 0
+Most Time-consuming Kernel(CUDA), vectorAdd:C:/Users/MTL/source/codepin/example.cu:25:5:epilog, time:0.827392
+Most Time-consuming Kernel(SYCL), vectorAdd:C:/Users/MTL/source/codepin/example.cu:25:5:prolog, time:0.0
+Peak Device Memory Used(CUDA), 1143472128
+Peak Device Memory Used(SYCL), 17662062592
+CUDA Meta Data ID, SYCL Meta Data ID, Type, Detail
+vectorAdd:C:/Users/MTL/source/codepin/example.cu:25:5:epilog,vectorAdd:C:/Users/MTL/source/codepin/example.cu:25:5:epilog,Data value,The location of failed ID Errors occurred during comparison: d_a->"Data"->[3]->"Data"->[0]->"x"->"Data"->[0] and [ERROR: DATA VALUE MISMATCH] the CUDA value 1 differs from the SYCL value 0.; d_result->"Data"->[3]->"Data"->[0]->"x"->"Data"->[0] and [ERROR: DATA VALUE MISMATCH] the CUDA value 2 differs from the SYCL value 1.
+vectorAdd:C:/Users/MTL/source/codepin/example.cu:25:5:prolog,vectorAdd:C:/Users/MTL/source/codepin/example.cu:25:5:prolog,Data value,[WARNING: METADATA MISMATCH] The pair of prolog data vectorAdd:C:/Users/MTL/source/codepin/example.cu:25:5:prolog are mismatched, and the corresponding pair of epilog data matches. This mismatch may be caused by the initialized memory or argument used in the API vectorAdd.![Uploading image.png…]()
+
 ```
