@@ -16,3 +16,9 @@ icpx mkl_gemm_bf16bf16f32_benchmark.cpp -qmkl -o mkl_bf16bf16f32; ./mkl_bf16bf16
 export KMP_AFFINITY=granularity=fine,compact,1,0
 icpx mkl_gemm_f16f16f32_benchmark.cpp -qmkl -o mkl_f16f16f32; ./mkl_f16f16f32 10000 10000 10000
 ```
+
+# mkl_sgemm_benchmark
+```
+export KMP_AFFINITY=granularity=fine,compact,1,0
+icpx mkl_sgemm_benchmark.cpp -qmkl -o mkl_sgemm; ./mkl_sgemm_benchmark 10000 10000 10000
+```
