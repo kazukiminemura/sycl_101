@@ -20,5 +20,5 @@ icpx mkl_gemm_f16f16f32_benchmark.cpp -qmkl -o mkl_f16f16f32; ./mkl_f16f16f32 10
 # mkl_sgemm_benchmark
 ```
 export KMP_AFFINITY=granularity=fine,compact,1,0
-icpx mkl_sgemm_benchmark.cpp -qmkl -o mkl_sgemm; ./mkl_sgemm_benchmark 10000 10000 10000
+icpx mkl_sgemm_benchmark.cpp -qmkl -o mkl_sgemm_benchmark; ./mkl_sgemm_benchmark 10000 10000 10000
 ```
