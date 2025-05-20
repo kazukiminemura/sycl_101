@@ -14,11 +14,11 @@ int main(int argc, char* argv[]) {
     int N = std::atoi(argv[2]);
     int K = std::atoi(argv[3]);
     constexpr int iterations = 1000;
-
-    int num_threads = mkl_get_max_threads();
-    std::cout << "Matrix dimensions: M=" << M << ", N=" << N << ", K=" << K << "\n";
-    std::cout << "Using " << num_threads << " MKL threads\n";
-
+    
+    int num_threads = mkl_get_max_threads();
+    std::cout << "Matrix dimensions: M=" << M << ", N=" << N << ", K=" << K << "\n";
+    std::cout << "Using " << num_threads << " MKL threads\n";
+    
     std::vector<MKL_BF16> A(M * K);
     std::vector<MKL_BF16> B(K * N);
     std::vector<float> C(M * N, 0.0f);
