@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
     double tflops = (2.0 * M * N * K) / (avg_time * 1e12);
 
     std::cout << "Average execution time over " << iterations << " runs: " << avg_time << " seconds\n";
-    std::cout << "BF16 Performance: " << tflops << " TFLOPs\n";
+    std::cout << "BF16BF16FP32 Performance: " << tflops << " TFLOPs\n";
 
     return 0;
 }
