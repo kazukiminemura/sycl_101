@@ -1,6 +1,6 @@
 # 使い方
 ```
-icpx openmp_tbb_multithread.cpp -ltbb -qopenmp -o openmp_tbb_multithreads
+icpx openmp_tbb_multithreads.cpp -ltbb -qopenmp -o openmp_tbb_multithreads
 ./openmp_tbb_multithreads
 ```
 
