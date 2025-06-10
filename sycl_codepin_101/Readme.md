@@ -39,7 +39,7 @@ Result[3]: (2, 3, 4)
 
 ## SYCL
 ```
-icpx -fsycl -std=c++17 example.dp.cpp
+icpx -fsycl -fsycl-targets=nvptx64-nvidia-cuda -std=c++17 example.dp.cpp
 a.exe
 
 get_memory_info: ext_intel_free_memory is not supported.
