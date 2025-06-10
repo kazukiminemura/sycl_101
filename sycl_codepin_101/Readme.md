@@ -32,6 +32,17 @@ a.exe
 ```
 icpx -fsycl -std=c++17 example.dp.cpp
 a.exe
+
+get_memory_info: ext_intel_free_memory is not supported.
+CodePin data sampling is enabled for data dump. As follow list 3 configs for data sampling:
+CODEPIN_RAND_SEED: 0
+CODEPIN_SAMPLING_THRESHOLD: 20
+CODEPIN_SAMPLING_PERCENT: 1
+get_memory_info: ext_intel_free_memory is not supported.
+Result[0]: (2, 3, 4)
+Result[1]: (2, 3, 4)
+Result[2]: (2, 3, 4)
+Result[3]: (1, 1, 1)
 ```
 
 # CodePin レポートの生成:
