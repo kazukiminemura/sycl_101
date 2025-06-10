@@ -26,6 +26,14 @@ workspace
 ```
 nvcc -std=c++17 example.cu
 a.exe
+CodePin data sampling is enabled for data dump. As follow list 3 configs for data sampling:
+CODEPIN_RAND_SEED: 0
+CODEPIN_SAMPLING_THRESHOLD: 20
+CODEPIN_SAMPLING_PERCENT: 1
+Result[0]: (2, 3, 4)
+Result[1]: (2, 3, 4)
+Result[2]: (2, 3, 4)
+Result[3]: (2, 3, 4)
 ```
 
 ## SYCL
