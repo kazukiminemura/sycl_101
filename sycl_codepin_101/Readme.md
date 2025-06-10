@@ -56,4 +56,9 @@ Result[3]: (1, 1, 1)
 
 # CodePin レポートの生成:
 ```codepin-report.py [-h] --instrumented-cuda-log <file path> --instrumented-sycl-log <file path>```    
+
+```
+python3 "C:\Program Files (x86)\Intel\oneAPI\2025.2\bin\codepin-report.py" --instrumented-cuda-log dpct_output_codepin_sycl_codepin_cuda\CodePin_CUDA_2025-06-10_10-31-38.json --instrumented-sycl-log dpct_output_codepin_sycl_codepin_sycl\CodePin_SYCL_2025-06-10_10-31-03.json
+Finished comparison of the two files and found differences. Please check 'CodePin_Report.csv' file located in your project directory.
+```
 このスクリプトを実行すると、CSV ファイルが生成されます。
