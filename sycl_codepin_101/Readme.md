@@ -21,6 +21,19 @@ workspace
 │   └── generated_schema.hpp  
     
 
+# Log file will be generation
+## CUDA
+```
+nvcc -std=c++17 example.cu
+a.exe
+```
+
+## SYCL
+```
+icpx -fsycl -std=c++17 example.dp.cpp
+a.exe
+```
+
 # CodePin レポートの生成:
 ```codepin-report.py [-h] --instrumented-cuda-log <file path> --instrumented-sycl-log <file path>```    
 このスクリプトを実行すると、CSV ファイルが生成されます。
