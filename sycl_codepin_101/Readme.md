@@ -63,6 +63,12 @@ Finished comparison of the two files and found differences. Please check 'CodePi
 ```
 このスクリプトを実行すると、CSV ファイルが生成されます。
 
+if graphviz is missing
+```
+pip install graphviz'
+```
+
+
 # レポート
 The location of failed ID Errors occurred during comparison:    
 d_a->"Data"->[3]->"Data"->[0]->"x"->"Data"->[0] and [ERROR: DATA VALUE MISMATCH] the CUDA value 1 differs from the SYCL value 0.;    
