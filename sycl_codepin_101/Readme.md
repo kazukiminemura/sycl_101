@@ -22,5 +22,5 @@ workspace
     
 
 # CodePin レポートの生成:
-```codepin-report.py [-h] --instrumented-cuda-log <file path> --instrumented-sycl-log <file path>```
+```codepin-report.py [-h] --instrumented-cuda-log <file path> --instrumented-sycl-log <file path>```    
 このスクリプトを実行すると、CSV ファイルが生成されます。
