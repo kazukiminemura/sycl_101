@@ -1,5 +1,7 @@
 #include <sycl/sycl.hpp>
 #include <chrono>
+#include <algorithm>
+#include <numeric>
 
 using namespace sycl;
 
