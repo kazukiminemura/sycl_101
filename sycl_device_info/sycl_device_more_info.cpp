@@ -10,7 +10,7 @@ void do_query(const T& obj_to_query, const std::string& name, int indent = 4){
 }
 
 int main(){
-    // Loop through avaiable platforms
+    // Loop through available platforms
     for(auto const& this_platform: platform::get_platforms()){
         std::cout << "Found Platform:\n";
         do_query<info::platform::name>(this_platform, "info::platform::name");
@@ -18,7 +18,7 @@ int main(){
         do_query<info::platform::version>(this_platform, "info::platform::version");
         do_query<info::platform::profile>(this_platform, "info::platform::profile");
 
-        // Loop through devices avaiable in this platform
+        // Loop through devices available in this platform
         for(auto const& dev: this_platform.get_devices()){
             std::cout << "  Device: " << dev.get_info<info::device::name>() << "\n";
             std::cout << "  is_cpu(): " << (dev.is_cpu()? "Yes" : "No") << "\n";
@@ -32,7 +32,7 @@ int main(){
             do_query<info::device::mem_base_addr_align>(dev, "info::device::mem_base_addr_align");
             do_query<info::device::partition_max_sub_devices>(dev, "info::device::partition_max_sub_devices");
         
-            std::cout << "  Many more queries are avaiable than shown here!\n";
+            std::cout << "  Many more queries are available than shown here!\n";
         }
         std::cout << "\n";    
     }

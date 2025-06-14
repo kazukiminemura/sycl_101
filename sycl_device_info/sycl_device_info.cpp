@@ -3,7 +3,7 @@
 using namespace sycl;
 
 int main(){
-    // Loop through avaiable platforms
+    // Loop through available platforms
     for(auto const& this_platform: platform::get_platforms()){
         std::cout << "Platform: " << this_platform.get_info<info::platform::name>() << std::endl;
         // Loop through devices
