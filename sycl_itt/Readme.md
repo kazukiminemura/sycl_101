@@ -1,4 +1,4 @@
-# 使い方
+# 使い方 (Windows)
 ```
 git clone https://github.com/intel/ittapi.git
 cd ittapi
