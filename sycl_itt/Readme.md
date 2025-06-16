@@ -9,7 +9,7 @@ set INCLUDE=<path/to/sycl_itt>\ittapi\include;%INCLUDE%
 icpx -fsycl sycl_itt.cpp -o sycl_itt -llibittnotify
 ```
 
-# 
+# プロファイリング
 ```
 vtune --collect hotspots -- sycl_itt
 ```
