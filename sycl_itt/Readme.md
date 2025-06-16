@@ -4,7 +4,7 @@ git clone https://github.com/intel/ittapi.git
 cd ittapi
 python buildall.py --vs 17
 
-set LIB=C:\Users\kminemur\source\sycl_101\sycl_itt\ittapi\build_win\64\bin\Release;%LIB%
-set INCLUDE=C:\Users\kminemur\source\sycl_101\sycl_itt\ittapi\include;%INCLUDE%
+set LIB=<path/to/sycl_itt>\ittapi\build_win\64\bin\Release;%LIB%
+set INCLUDE=<path/to/sycl_itt>\ittapi\include;%INCLUDE%
 icpx -fsycl sycl_itt.cpp -o sycl_itt
 ```
