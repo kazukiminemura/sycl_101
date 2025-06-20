@@ -5,13 +5,13 @@
 #include <cstring>
 #include <unistd.h>
 #include <sys/syscall.h>
-#include <ctime>
 #include <iostream>
+#include <chrono>
 
+#define TILE_ROWS 16
+#define TILE_COLS 64
 #define MAX 1024
-#define MAX_ROWS 16
-#define MAX_COLS 64
-#define STRIDE 64
+
 #define LOOP_COUNT 1000
 
 #define ARCH_REQ_XCOMP_PERM 0x1023
@@ -37,90 +37,93 @@ void init_tile_config(__tile_config* tileinfo) {
     tileinfo->palette_id = 1;
     tileinfo->start_row = 0;
 
-    tileinfo->colsb[1] = MAX_COLS;
-    tileinfo->rows[1] = MAX_ROWS;
-    tileinfo->colsb[2] = MAX_COLS;
-    tileinfo->rows[2] = MAX_ROWS;
-    tileinfo->colsb[3] = MAX_ROWS * 4;
-    tileinfo->rows[3] = MAX_ROWS;
+    for (int i = 0; i < 8; ++i) {
+        tileinfo->colsb[i] = TILE_COLS;
+        tileinfo->rows[i] = TILE_ROWS;
+    }
 
     _tile_loadconfig(tileinfo);
 }
 
 void init_buffer(int8_t* buf, int8_t val) {
-    for (int i = 0; i < MAX_ROWS * MAX_COLS; ++i)
+    for (int i = 0; i < MAX * MAX; ++i)
         buf[i] = val;
 }
 
 void init_buffer32(int32_t* buf, int32_t val) {
-    for (int i = 0; i < MAX_ROWS * MAX_ROWS; ++i)
+    for (int i = 0; i < MAX * MAX; ++i)
         buf[i] = val;
-}
-
-long get_time_diff_ns(timespec start, timespec end) {
-    return (end.tv_sec - start.tv_sec) * 1000000000L + (end.tv_nsec - start.tv_nsec);
 }
 
 void run_amx(int8_t* A, int8_t* B, int32_t* C) {
     __tile_config cfg = {};
     init_tile_config(&cfg);
 
-    _tile_loadd(2, A, STRIDE);
-    _tile_loadd(3, B, STRIDE);
-    _tile_loadd(1, C, STRIDE);
-
-    _tile_dpbssd(1, 2, 3);  // C += A * B
-
-    _tile_stored(1, C, STRIDE);
+    for (int i = 0; i < MAX; i += TILE_ROWS) {
+        for (int j = 0; j < MAX; j += TILE_ROWS) {
+            for (int k = 0; k < MAX; k += TILE_COLS) {
+                _tile_loadd(1, &C[i * MAX + j], MAX * sizeof(int32_t));
+                _tile_loadd(2, &A[i * MAX + k], MAX);
+                _tile_loadd(3, &B[j * MAX + k], MAX);
+                _tile_dpbssd(1, 2, 3);
+                _tile_stored(1, &C[i * MAX + j], MAX * sizeof(int32_t));
+            }
+        }
+    }
     _tile_release();
 }
 
 void run_avx512_vnni(int8_t* A, int8_t* B, int32_t* C) {
-    for (int i = 0; i < MAX_ROWS; ++i) {
-        for (int j = 0; j < MAX_ROWS; ++j) {
+    for (int i = 0; i < MAX; i += TILE_ROWS) {
+        for (int j = 0; j < MAX; j += TILE_ROWS) {
             __m512i acc = _mm512_setzero_si512();
-            for (int k = 0; k < MAX_COLS; k += 64) {
-                __m512i a = _mm512_loadu_si512((__m512i*)&A[i * MAX_COLS + k]);
-                __m512i b = _mm512_loadu_si512((__m512i*)&B[j * MAX_COLS + k]);
+            for (int k = 0; k < MAX; k += TILE_COLS) {
+                __m512i a = _mm512_loadu_si512((__m512i*)&A[i * MAX + k]);
+                __m512i b = _mm512_loadu_si512((__m512i*)&B[j * MAX + k]);
                 acc = _mm512_dpbusd_epi32(acc, a, b);
             }
-            C[i * MAX_ROWS + j] = _mm512_reduce_add_epi32(acc);
+            C[i * MAX + j] = _mm512_reduce_add_epi32(acc);
         }
     }
 }
 
 int main() {
+    std::string mode;
+    std::cout << "Enter target instrument? amx or vnni: ";
+    std::cin >> mode;
+
     if (!set_tiledata_use()) return -1;
 
-    int8_t A[MAX], B[MAX];
-    int32_t C_amx[MAX_ROWS * MAX_ROWS], C_vnni[MAX_ROWS * MAX_ROWS];
+    int8_t A[MAX * MAX];
+    int8_t B[MAX * MAX];
+    int32_t C_amx[MAX * MAX], C_vnni[MAX * MAX];
 
     init_buffer(A, 1);
     init_buffer(B, 2);
 
-    timespec start, end;
-    long amx_time_ns, vnni_time_ns;
+    using namespace std::chrono;
 
-    // AMX
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    for (int i = 0; i < LOOP_COUNT; ++i) {
-        init_buffer32(C_amx, 0);
-        run_amx(A, B, C_amx);
+    if (mode == "amx"){
+        // AMX timing
+        auto start_amx = high_resolution_clock::now();
+        for (int i = 0; i < LOOP_COUNT; ++i) {
+            init_buffer32(C_amx, 0);
+            run_amx(A, B, C_amx);
+        }
+        auto end_amx = high_resolution_clock::now();
+        auto amx_time_ns = duration_cast<nanoseconds>(end_amx - start_amx).count();
+        std::cout << "AMX Time (1000 loops)        : " << amx_time_ns << " ns" << std::endl;
+    } else if (mode == "vnni") {
+        // AVX512 VNNI timing
+        auto start_vnni = high_resolution_clock::now();
+        for (int i = 0; i < LOOP_COUNT; ++i) {
+            init_buffer32(C_vnni, 0);
+            run_avx512_vnni(A, B, C_vnni);
+        }
+        auto end_vnni = high_resolution_clock::now();
+        auto vnni_time_ns = duration_cast<nanoseconds>(end_vnni - start_vnni).count();
+        std::cout << "AVX512 VNNI Time (1000 loops): " << vnni_time_ns << " ns" << std::endl;
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    amx_time_ns = get_time_diff_ns(start, end);
-
-    // AVX512 VNNI
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    for (int i = 0; i < LOOP_COUNT; ++i) {
-        init_buffer32(C_vnni, 0);
-        run_avx512_vnni(A, B, C_vnni);
-    }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    vnni_time_ns = get_time_diff_ns(start, end);
-
-    std::cout << "AMX Time (1000 loops): " << amx_time_ns << " ns" << std::endl;
-    std::cout << "AVX512 VNNI Time (1000 loops): " << vnni_time_ns << " ns" << std::endl;
 
     return 0;
 }
