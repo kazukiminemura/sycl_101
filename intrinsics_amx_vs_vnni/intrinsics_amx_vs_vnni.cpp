@@ -39,9 +39,17 @@ void init_tile_config(__tile_config* tileinfo) {
     tileinfo->palette_id = 1;
     tileinfo->start_row = 0;
 
-    for (int i = 0; i < 8; ++i) {
-        tileinfo->rows[i] = TILE_ROWS;
+    // only tile0 tile1 and tile2 will be used
+    for (int i = 0; i < 1; ++i)
+    {
+        tileinfo->colsb[i] = TILE_ROWS;
+        tileinfo->rows[i] =  TILE_ROWS;
+    }
+
+    for (int i = 1; i < 4; ++i)
+    {
         tileinfo->colsb[i] = TILE_COLS;
+        tileinfo->rows[i] =  TILE_ROWS;
     }
 
     _tile_loadconfig(tileinfo);
@@ -58,22 +66,31 @@ void init_buffer32(int32_t* buf, int32_t val) {
 }
 
 void run_amx(int8_t* A, int8_t* B, int32_t* C) {
+    int32_t res[TILE_ROWS * TILE_COLS] = {0}; // 正しいサイズの一時バッファ
+
     for (int i = 0; i < MATRIX_SIZE; i += TILE_ROWS) {
         for (int j = 0; j < MATRIX_SIZE; j += TILE_COLS) {
-            // Cの該当ブロックをタイル0に読み込む
-            int32_t* c_ptr = &C[i * MATRIX_SIZE + j];
-            _tile_loadd(0, c_ptr, MATRIX_SIZE * sizeof(int32_t));
+            memset(res, 0, sizeof(res)); // バッファ初期化
+            _tile_loadd(1, res, TILE_COLS * sizeof(int32_t)); // 出力タイル初期化
 
             for (int k = 0; k < MATRIX_SIZE; k += TILE_COLS) {
-                int8_t* a_ptr = &A[i * MATRIX_SIZE + k];
-                int8_t* b_ptr = &B[k * MATRIX_SIZE + j];
-                _tile_loadd(1, a_ptr, MATRIX_SIZE);
-                _tile_loadd(2, b_ptr, MATRIX_SIZE);
-                _tile_dpbssd(0, 1, 2);
+                int8_t* a_ptr = &A[i * MATRIX_SIZE + k];    // A: i行目から
+                int8_t* b_ptr = &B[k * MATRIX_SIZE + j];    // B: 転置アクセス
+
+                _tile_loadd(2, a_ptr, MATRIX_SIZE);         // Aブロック（行優先）
+                _tile_loadd(3, b_ptr, MATRIX_SIZE);         // Bブロック（列優先）
+
+                _tile_dpbssd(1, 2, 3);                      // 積和演算
             }
 
-            // 計算結果をCに書き戻す
-            _tile_stored(0, c_ptr, MATRIX_SIZE * sizeof(int32_t));
+            _tile_stored(1, res, TILE_COLS * sizeof(int32_t)); // 結果を res に保存
+
+            // res を C に書き戻す
+            for (int ii = 0; ii < TILE_ROWS; ++ii) {
+                for (int jj = 0; jj < TILE_COLS; ++jj) {
+                    C[(i + ii) * MATRIX_SIZE + (j + jj)] = res[ii * TILE_COLS + jj];
+                }
+            }
         }
     }
 }
