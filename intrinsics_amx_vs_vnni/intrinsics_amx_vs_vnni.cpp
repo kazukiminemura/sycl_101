@@ -60,9 +60,9 @@ void init_buffer32(int32_t* buf, int32_t val) {
 void run_amx(int8_t* A, int8_t* B, int32_t* C) {
     for (int i = 0; i < MATRIX_SIZE; i += TILE_ROWS) {
         for (int j = 0; j < MATRIX_SIZE; j += TILE_COLS) {
-            int32_t tmp[TILE_ROWS * TILE_COLS] = {0};
-            memset(tmp, 0, sizeof(tmp));
-            _tile_loadd(0, tmp, TILE_COLS * sizeof(int32_t));
+            // Cの該当ブロックをタイル0に読み込む
+            int32_t* c_ptr = &C[i * MATRIX_SIZE + j];
+            _tile_loadd(0, c_ptr, MATRIX_SIZE * sizeof(int32_t));
 
             for (int k = 0; k < MATRIX_SIZE; k += TILE_COLS) {
                 int8_t* a_ptr = &A[i * MATRIX_SIZE + k];
@@ -72,14 +72,8 @@ void run_amx(int8_t* A, int8_t* B, int32_t* C) {
                 _tile_dpbssd(0, 1, 2);
             }
 
-            _tile_stored(0, tmp, TILE_COLS * sizeof(int32_t));
-
-            for (int ti = 0; ti < TILE_ROWS; ++ti) {
-                for (int tj = 0; tj < TILE_COLS; ++tj) {
-                    // std::cout << tmp[ti * TILE_COLS + tj] << std::endl;
-                    C[(i + ti) * MATRIX_SIZE + (j + tj)] += tmp[ti * TILE_COLS + tj];
-                }
-            }
+            // 計算結果をCに書き戻す
+            _tile_stored(0, c_ptr, MATRIX_SIZE * sizeof(int32_t));
         }
     }
 }
@@ -116,10 +110,10 @@ int main() {
     __tile_config cfg = {};
     init_tile_config(&cfg);
     auto start_amx = high_resolution_clock::now();
-    // for (int i = 0; i < LOOP_COUNT; ++i) {
+    for (int i = 0; i < LOOP_COUNT; ++i) {
         init_buffer32(C_amx, 0);
         run_amx(A, B, C_amx);
-    // }
+    }
     _tile_release();
     auto end_amx = high_resolution_clock::now();
     auto amx_time_ms = duration_cast<std::chrono::milliseconds>(end_amx - start_amx).count();
