@@ -10,9 +10,9 @@
 
 #define TILE_ROWS 16
 #define TILE_COLS 64
-#define MAX 1024 // need to be multiples of 64
-// #define MAX 2048 // need to be multiples of 64
-// #define MAX 4096 // need to be multiples of 64
+#define MATRIX_SIZE 1024 // need to be multiples of 64
+// #define MATRIX_SIZE 2048 // need to be multiples of 64
+// #define MATRIX_SIZE 4096 // need to be multiples of 64
 
 #define LOOP_COUNT 1000
 
@@ -48,68 +48,54 @@ void init_tile_config(__tile_config* tileinfo) {
 }
 
 void init_buffer(int8_t* buf, int8_t val) {
-    for (int i = 0; i < MAX * MAX; ++i)
+    for (int i = 0; i < MATRIX_SIZE * MATRIX_SIZE; ++i)
         buf[i] = val;
 }
 
 void init_buffer32(int32_t* buf, int32_t val) {
-    for (int i = 0; i < MAX * MAX; ++i)
+    for (int i = 0; i < MATRIX_SIZE * MATRIX_SIZE; ++i)
         buf[i] = val;
 }
 
 void run_amx(int8_t* A, int8_t* B, int32_t* C) {
-    // Cブロックの初期化（ゼロ）
-    int32_t zero_block[TILE_ROWS * TILE_COLS] = {0};
+    for (int i = 0; i < MATRIX_SIZE; i += TILE_ROWS) {
+        for (int j = 0; j < MATRIX_SIZE; j += TILE_COLS) {
+            int32_t tmp[TILE_ROWS * TILE_COLS] = {0};
+            memset(tmp, 0, sizeof(tmp));
+            _tile_loadd(0, tmp, TILE_COLS * sizeof(int32_t));
 
-    for (int i = 0; i < MAX; i += TILE_ROWS*2) {
-        int i1 = i + TILE_ROWS;
-        for (int j = 0; j < MAX; j += TILE_COLS*2) {
-            int j1 = j + TILE_COLS;
-
-            // 出力タイル初期化
-            _tile_loadd(4, zero_block, TILE_COLS * sizeof(int32_t));
-            _tile_loadd(5, zero_block, TILE_COLS * sizeof(int32_t));
-            _tile_loadd(6, zero_block, TILE_COLS * sizeof(int32_t));
-            _tile_loadd(7, zero_block, TILE_COLS * sizeof(int32_t));
-
-            for (int k = 0; k < MAX; k += TILE_COLS) {
-                // A 上段
-                _tile_loadd(0, &A[i * MAX + k], MAX);
-                // A 下段
-                _tile_loadd(2, &A[i1 * MAX + k], MAX);
-                // B 左列
-                _tile_loadd(1, &B[j * MAX + k], MAX);
-
-                _tile_dpbssd(4, 0, 1); // C00
-                _tile_dpbssd(6, 2, 1); // C10
-
-                // B 右列
-                _tile_loadd(3, &B[j1 * MAX + k], MAX);
-                _tile_dpbssd(5, 0, 3); // C01
-                _tile_dpbssd(7, 2, 3); // C11
+            for (int k = 0; k < MATRIX_SIZE; k += TILE_COLS) {
+                int8_t* a_ptr = &A[i * MATRIX_SIZE + k];
+                int8_t* b_ptr = &B[k * MATRIX_SIZE + j];
+                _tile_loadd(1, a_ptr, MATRIX_SIZE);
+                _tile_loadd(2, b_ptr, MATRIX_SIZE);
+                _tile_dpbssd(0, 1, 2);
             }
-            // 出力保存
-            _tile_stored(4, &C[i * MAX + j], MAX * sizeof(int32_t));
-            _tile_stored(5, &C[i * MAX + j1], MAX * sizeof(int32_t));
-            _tile_stored(6, &C[i1 * MAX + j], MAX * sizeof(int32_t));
-            _tile_stored(7, &C[i1 * MAX + j1], MAX * sizeof(int32_t));
 
+            _tile_stored(0, tmp, TILE_COLS * sizeof(int32_t));
+
+            for (int ti = 0; ti < TILE_ROWS; ++ti) {
+                for (int tj = 0; tj < TILE_COLS; ++tj) {
+                    // std::cout << tmp[ti * TILE_COLS + tj] << std::endl;
+                    C[(i + ti) * MATRIX_SIZE + (j + tj)] += tmp[ti * TILE_COLS + tj];
+                }
+            }
         }
     }
 }
 
 void run_avx512_vnni(int8_t* A, int8_t* B, int32_t* C) {
-    for (int i = 0; i < MAX; ++i) {
-        for (int j = 0; j < MAX; ++j) {
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
             __m512i acc = _mm512_setzero_si512();
-            for (int k = 0; k < MAX; k += 64) {
+            for (int k = 0; k < MATRIX_SIZE; k += 64) {
                 // Aの1行から64要素をロード
-                const __m512i vec_a = _mm512_loadu_si512((const __m512i*)(A + i * MAX + k));
+                const __m512i vec_a = _mm512_loadu_si512((const __m512i*)(A + i * MATRIX_SIZE + k));
                 // Bの1列から64要素をロード（Bは転置されていると仮定）
-                const __m512i vec_b = _mm512_loadu_si512((const __m512i*)(B + j * MAX + k));
+                const __m512i vec_b = _mm512_loadu_si512((const __m512i*)(B + j * MATRIX_SIZE + k));
                 acc = _mm512_dpbusd_epi32(acc, vec_a, vec_b);
             }
-            C[i * MAX + j] = _mm512_reduce_add_epi32(acc);
+            C[i * MATRIX_SIZE + j] = _mm512_reduce_add_epi32(acc);
         }
     }
 }
@@ -117,12 +103,12 @@ void run_avx512_vnni(int8_t* A, int8_t* B, int32_t* C) {
 int main() {
     if (!set_tiledata_use()) return -1;
 
-    int8_t A[MAX * MAX];
-    int8_t B[MAX * MAX];
-    int32_t C_amx[MAX * MAX], C_vnni[MAX * MAX];
+    int8_t A[MATRIX_SIZE * MATRIX_SIZE];
+    int8_t B[MATRIX_SIZE * MATRIX_SIZE];
+    int32_t C_amx[MATRIX_SIZE * MATRIX_SIZE], C_vnni[MATRIX_SIZE * MATRIX_SIZE];
 
     init_buffer(A, 1);
-    init_buffer(B, 2);
+    init_buffer(B, 1);
 
     using namespace std::chrono;
 
@@ -130,27 +116,32 @@ int main() {
     __tile_config cfg = {};
     init_tile_config(&cfg);
     auto start_amx = high_resolution_clock::now();
-    volatile int32_t sum_amx = 0;
-    for (int i = 0; i < LOOP_COUNT; ++i) {
+    // for (int i = 0; i < LOOP_COUNT; ++i) {
         init_buffer32(C_amx, 0);
         run_amx(A, B, C_amx);
-        sum_amx += C_amx[i];
-    }
+    // }
     _tile_release();
     auto end_amx = high_resolution_clock::now();
     auto amx_time_ms = duration_cast<std::chrono::milliseconds>(end_amx - start_amx).count();
+
+    for (int i = 0; i < 64; ++i) {
+        // if (C_amx[i] != 1024) 
+        std::cout << "Wrong sum: " << C_amx[i] << std::endl;
+    }
     std::cout << "AMX Time (1000 loops)        : " << amx_time_ms << " ms" << std::endl;
 
     // AVX512 VNNI timing
     auto start_vnni = high_resolution_clock::now();
-    volatile int32_t sum_vnni = 0;
     for (int i = 0; i < LOOP_COUNT; ++i) {
         init_buffer32(C_vnni, 0);
         run_avx512_vnni(A, B, C_vnni);
-        sum_vnni += C_vnni[i];
     }
     auto end_vnni = high_resolution_clock::now();
     auto vnni_time_ms = duration_cast<std::chrono::milliseconds>(end_vnni - start_vnni).count();
+
+    for (int i = 0; i < MATRIX_SIZE*MATRIX_SIZE; ++i) {
+        if (C_vnni[i] != 1024) std::cout << "Wrong sum: " << C_vnni[i] << std::endl;
+    }
     std::cout << "AVX512 VNNI Time (1000 loops): " << vnni_time_ms << " ms" << std::endl;
 
     return 0;
