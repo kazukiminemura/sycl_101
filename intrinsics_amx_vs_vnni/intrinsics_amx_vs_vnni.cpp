@@ -66,16 +66,14 @@ void init_buffer32(int32_t* buf, int32_t val) {
 }
 
 void run_amx(int8_t* A, int8_t* B, int32_t* C) {
-    int32_t res[TILE_ROWS * TILE_COLS] = {0}; // 正しいサイズの一時バッファ
-
     for (int i = 0; i < MATRIX_SIZE; i += TILE_ROWS) {
         for (int j = 0; j < MATRIX_SIZE; j += TILE_COLS) {
-            memset(res, 0, sizeof(res)); // バッファ初期化
-            _tile_loadd(1, res, TILE_COLS * sizeof(int32_t)); // 出力タイル初期化
+            int32_t* c_ptr = &C[i * MATRIX_SIZE + j];    // A: i行目から
+            _tile_loadd(1, c_ptr, MATRIX_SIZE);
 
             for (int k = 0; k < MATRIX_SIZE; k += TILE_COLS) {
                 int8_t* a_ptr = &A[i * MATRIX_SIZE + k];    // A: i行目から
-                int8_t* b_ptr = &B[k * MATRIX_SIZE + j];    // B: 転置アクセス
+                int8_t* b_ptr = &B[j * MATRIX_SIZE + k];    // B: 転置アクセス
 
                 _tile_loadd(2, a_ptr, MATRIX_SIZE);         // Aブロック（行優先）
                 _tile_loadd(3, b_ptr, MATRIX_SIZE);         // Bブロック（列優先）
@@ -83,14 +81,8 @@ void run_amx(int8_t* A, int8_t* B, int32_t* C) {
                 _tile_dpbssd(1, 2, 3);                      // 積和演算
             }
 
-            _tile_stored(1, res, TILE_COLS * sizeof(int32_t)); // 結果を res に保存
+            _tile_stored(1, c_ptr, MATRIX_SIZE); // 結果を c_ptr に保存
 
-            // res を C に書き戻す
-            for (int ii = 0; ii < TILE_ROWS; ++ii) {
-                for (int jj = 0; jj < TILE_COLS; ++jj) {
-                    C[(i + ii) * MATRIX_SIZE + (j + jj)] = res[ii * TILE_COLS + jj];
-                }
-            }
         }
     }
 }
@@ -114,9 +106,9 @@ void run_avx512_vnni(int8_t* A, int8_t* B, int32_t* C) {
 int main() {
     if (!set_tiledata_use()) return -1;
 
-    int8_t A[MATRIX_SIZE * MATRIX_SIZE];
-    int8_t B[MATRIX_SIZE * MATRIX_SIZE];
-    int32_t C_amx[MATRIX_SIZE * MATRIX_SIZE], C_vnni[MATRIX_SIZE * MATRIX_SIZE];
+    alignas(64) int8_t A[MATRIX_SIZE * MATRIX_SIZE];
+    alignas(64) int8_t B[MATRIX_SIZE * MATRIX_SIZE];
+    alignas(64) int32_t C_amx[MATRIX_SIZE * MATRIX_SIZE], C_vnni[MATRIX_SIZE * MATRIX_SIZE];
 
     init_buffer(A, 1);
     init_buffer(B, 1);
