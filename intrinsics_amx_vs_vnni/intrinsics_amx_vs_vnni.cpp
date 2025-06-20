@@ -10,7 +10,9 @@
 
 #define TILE_ROWS 16
 #define TILE_COLS 64
-#define MAX 1024
+#define MAX 1024 // need to be multiples of 64
+// #define MAX 2048 // need to be multiples of 64
+// #define MAX 4096 // need to be multiples of 64
 
 #define LOOP_COUNT 1000
 
@@ -38,8 +40,8 @@ void init_tile_config(__tile_config* tileinfo) {
     tileinfo->start_row = 0;
 
     for (int i = 0; i < 8; ++i) {
-        tileinfo->colsb[i] = TILE_COLS;
         tileinfo->rows[i] = TILE_ROWS;
+        tileinfo->colsb[i] = TILE_COLS;
     }
 
     _tile_loadconfig(tileinfo);
@@ -56,31 +58,56 @@ void init_buffer32(int32_t* buf, int32_t val) {
 }
 
 void run_amx(int8_t* A, int8_t* B, int32_t* C) {
-    __tile_config cfg = {};
-    init_tile_config(&cfg);
+    // Cブロックの初期化（ゼロ）
+    int32_t zero_block[TILE_ROWS * TILE_COLS] = {0};
 
-    for (int i = 0; i < MAX; i += TILE_ROWS) {
-        for (int j = 0; j < MAX; j += TILE_ROWS) {
+    for (int i = 0; i < MAX; i += TILE_ROWS*2) {
+        int i1 = i + TILE_ROWS;
+        for (int j = 0; j < MAX; j += TILE_COLS*2) {
+            int j1 = j + TILE_COLS;
+
+            // 出力タイル初期化
+            _tile_loadd(4, zero_block, TILE_COLS * sizeof(int32_t));
+            _tile_loadd(5, zero_block, TILE_COLS * sizeof(int32_t));
+            _tile_loadd(6, zero_block, TILE_COLS * sizeof(int32_t));
+            _tile_loadd(7, zero_block, TILE_COLS * sizeof(int32_t));
+
             for (int k = 0; k < MAX; k += TILE_COLS) {
-                _tile_loadd(1, &C[i * MAX + j], MAX * sizeof(int32_t));
-                _tile_loadd(2, &A[i * MAX + k], MAX);
-                _tile_loadd(3, &B[j * MAX + k], MAX);
-                _tile_dpbssd(1, 2, 3);
-                _tile_stored(1, &C[i * MAX + j], MAX * sizeof(int32_t));
+                // A 上段
+                _tile_loadd(0, &A[i * MAX + k], MAX);
+                // A 下段
+                _tile_loadd(2, &A[i1 * MAX + k], MAX);
+                // B 左列
+                _tile_loadd(1, &B[j * MAX + k], MAX);
+
+                _tile_dpbssd(4, 0, 1); // C00
+                _tile_dpbssd(6, 2, 1); // C10
+
+                // B 右列
+                _tile_loadd(3, &B[j1 * MAX + k], MAX);
+                _tile_dpbssd(5, 0, 3); // C01
+                _tile_dpbssd(7, 2, 3); // C11
             }
+            // 出力保存
+            _tile_stored(4, &C[i * MAX + j], MAX * sizeof(int32_t));
+            _tile_stored(5, &C[i * MAX + j1], MAX * sizeof(int32_t));
+            _tile_stored(6, &C[i1 * MAX + j], MAX * sizeof(int32_t));
+            _tile_stored(7, &C[i1 * MAX + j1], MAX * sizeof(int32_t));
+
         }
     }
-    _tile_release();
 }
 
 void run_avx512_vnni(int8_t* A, int8_t* B, int32_t* C) {
-    for (int i = 0; i < MAX; i += TILE_ROWS) {
-        for (int j = 0; j < MAX; j += TILE_ROWS) {
+    for (int i = 0; i < MAX; ++i) {
+        for (int j = 0; j < MAX; ++j) {
             __m512i acc = _mm512_setzero_si512();
-            for (int k = 0; k < MAX; k += TILE_COLS) {
-                __m512i a = _mm512_loadu_si512((__m512i*)&A[i * MAX + k]);
-                __m512i b = _mm512_loadu_si512((__m512i*)&B[j * MAX + k]);
-                acc = _mm512_dpbusd_epi32(acc, a, b);
+            for (int k = 0; k < MAX; k += 64) {
+                // Aの1行から64要素をロード
+                const __m512i vec_a = _mm512_loadu_si512((const __m512i*)(A + i * MAX + k));
+                // Bの1列から64要素をロード（Bは転置されていると仮定）
+                const __m512i vec_b = _mm512_loadu_si512((const __m512i*)(B + j * MAX + k));
+                acc = _mm512_dpbusd_epi32(acc, vec_a, vec_b);
             }
             C[i * MAX + j] = _mm512_reduce_add_epi32(acc);
         }
@@ -88,10 +115,6 @@ void run_avx512_vnni(int8_t* A, int8_t* B, int32_t* C) {
 }
 
 int main() {
-    std::string mode;
-    std::cout << "Enter target instrument? amx or vnni: ";
-    std::cin >> mode;
-
     if (!set_tiledata_use()) return -1;
 
     int8_t A[MAX * MAX];
@@ -103,27 +126,32 @@ int main() {
 
     using namespace std::chrono;
 
-    if (mode == "amx"){
-        // AMX timing
-        auto start_amx = high_resolution_clock::now();
-        for (int i = 0; i < LOOP_COUNT; ++i) {
-            init_buffer32(C_amx, 0);
-            run_amx(A, B, C_amx);
-        }
-        auto end_amx = high_resolution_clock::now();
-        auto amx_time_ns = duration_cast<nanoseconds>(end_amx - start_amx).count();
-        std::cout << "AMX Time (1000 loops)        : " << amx_time_ns << " ns" << std::endl;
-    } else if (mode == "vnni") {
-        // AVX512 VNNI timing
-        auto start_vnni = high_resolution_clock::now();
-        for (int i = 0; i < LOOP_COUNT; ++i) {
-            init_buffer32(C_vnni, 0);
-            run_avx512_vnni(A, B, C_vnni);
-        }
-        auto end_vnni = high_resolution_clock::now();
-        auto vnni_time_ns = duration_cast<nanoseconds>(end_vnni - start_vnni).count();
-        std::cout << "AVX512 VNNI Time (1000 loops): " << vnni_time_ns << " ns" << std::endl;
+    // AMX timing
+    __tile_config cfg = {};
+    init_tile_config(&cfg);
+    auto start_amx = high_resolution_clock::now();
+    volatile int32_t sum_amx = 0;
+    for (int i = 0; i < LOOP_COUNT; ++i) {
+        init_buffer32(C_amx, 0);
+        run_amx(A, B, C_amx);
+        sum_amx += C_amx[i];
     }
+    _tile_release();
+    auto end_amx = high_resolution_clock::now();
+    auto amx_time_ms = duration_cast<std::chrono::milliseconds>(end_amx - start_amx).count();
+    std::cout << "AMX Time (1000 loops)        : " << amx_time_ms << " ms" << std::endl;
+
+    // AVX512 VNNI timing
+    auto start_vnni = high_resolution_clock::now();
+    volatile int32_t sum_vnni = 0;
+    for (int i = 0; i < LOOP_COUNT; ++i) {
+        init_buffer32(C_vnni, 0);
+        run_avx512_vnni(A, B, C_vnni);
+        sum_vnni += C_vnni[i];
+    }
+    auto end_vnni = high_resolution_clock::now();
+    auto vnni_time_ms = duration_cast<std::chrono::milliseconds>(end_vnni - start_vnni).count();
+    std::cout << "AVX512 VNNI Time (1000 loops): " << vnni_time_ms << " ms" << std::endl;
 
     return 0;
 }
