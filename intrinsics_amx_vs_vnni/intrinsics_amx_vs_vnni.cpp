@@ -15,7 +15,7 @@
 // #define MATRIX_SIZE 2048 // need to be multiples of 64
 // #define MATRIX_SIZE 4096 // need to be multiples of 64
 
-#define LOOP_COUNT 1
+#define LOOP_COUNT 1000
 
 #define ARCH_REQ_XCOMP_PERM 0x1023
 #define XFEATURE_XTILEDATA 18
